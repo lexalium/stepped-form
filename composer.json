@@ -1,0 +1,23 @@
+{
+    "name": "lexal/stepped-form",
+    "description": "Implementation of the Stepped Form",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alex Lex",
+            "email": "allapkov@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+        "roave/security-advisories": "dev-latest",
+        "phpunit/phpunit": "^9.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lexal\\SteppedForm": "src/"
+        }
+    }
+}

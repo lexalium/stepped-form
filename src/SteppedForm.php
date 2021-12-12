@@ -10,6 +10,7 @@ use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\Event\FormFinished;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
+use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
@@ -27,7 +28,7 @@ class SteppedForm implements SteppedFormInterface
         private FormBuilderInterface $builder,
         private EventDispatcherInterface $dispatcher,
     ) {
-		$this->steps = new StepsCollection([]);
+        $this->steps = new StepsCollection([]);
     }
 
     public function getEntity(): mixed
@@ -35,10 +36,17 @@ class SteppedForm implements SteppedFormInterface
         return $this->formState->getEntity();
     }
 
+    /**
+     * @inheritDoc
+     *
+     * @throws FormIsNotStartedException
+     * @throws StepNotFoundException
+     * @throws EntityNotFoundException
+     */
     public function start(mixed $entity): ?Step
     {
-		$this->formState->initialize($entity, $this->steps);
-		$this->build($entity);
+        $this->build($entity);
+        $this->formState->initialize($entity, $this->steps);
 
         $step = $this->steps->first();
 
@@ -47,25 +55,25 @@ class SteppedForm implements SteppedFormInterface
 
     public function render(string $key): TemplateDefinition
     {
-		$this->build($this->getEntity());
+        $this->build($this->getEntity());
         $step = $this->steps->get($key);
 
         if (!$step->getStep() instanceof RenderStepInterface) {
             throw new StepNotRenderableException($key);
         }
 
-        return $step->getStep()->getTemplateDefinition($this->getStepEntity($key));
+        return $step->getStep()->getTemplateDefinition($this->getCurrentOrPreviousStepEntity($key));
     }
 
     public function handle(string $key, mixed $data): ?Step
     {
-		$this->build($this->getEntity());
+        $this->build($this->getEntity());
         $step = $this->steps->get($key);
 
-		/** @var BeforeHandleStep $event */
+        /** @var BeforeHandleStep $event */
         $event = $this->dispatcher->dispatch(new BeforeHandleStep($data, $step));
 
-        $entity = $step->getStep()->handle($this->getStepEntity($key), $event->data);
+        $entity = $step->getStep()->handle($this->getHandleStepEntity($key), $event->data);
 
         $this->build($entity);
 
@@ -76,12 +84,12 @@ class SteppedForm implements SteppedFormInterface
         if ($next === null) {
             $this->dispatcher->dispatch(new FormFinished($this->getEntity()));
 
-			$this->cancel();
+            $this->cancel();
 
             return null;
         }
 
-        return $this->prepareRenderStep($next);
+        return $this->prepareRenderStep($next, $event->data);
     }
 
     public function cancel(): void
@@ -89,15 +97,16 @@ class SteppedForm implements SteppedFormInterface
         $this->formState->finish();
     }
 
-	private function build(mixed $entity): void
-	{
-		$this->steps = $this->builder->build($entity);
-	}
+    private function build(mixed $entity): void
+    {
+        $this->steps = $this->builder->build($entity);
+    }
 
     /**
      * @throws StepNotFoundException
      * @throws SteppedFormErrorsException
      * @throws EntityNotFoundException
+     * @throws FormIsNotStartedException
      */
     private function prepareRenderStep(Step $step, mixed $data = null): ?Step
     {
@@ -114,20 +123,40 @@ class SteppedForm implements SteppedFormInterface
      * @throws EntityNotFoundException
      * @throws StepNotFoundException
      */
-    private function getStepEntity(string $key): mixed
+    private function getCurrentOrPreviousStepEntity(string $key): mixed
     {
-        $entity = $this->formState->getEntity($key);
+        $entity = $this->formState->getStepEntity($key);
 
         if ($entity === null) {
-            $previous = $this->steps->previous($key);
-
-            if ($previous === null) {
-                throw new EntityNotFoundException($key);
-            }
-
-            $entity = $this->formState->getEntity($previous->getKey());
+            $entity = $this->getPreviousStepEntity($key);
         }
 
         return $entity;
+    }
+
+    /**
+     * @throws EntityNotFoundException
+     * @throws StepNotFoundException
+     */
+    private function getPreviousStepEntity(string $key): mixed
+    {
+        $previous = $this->steps->previous($key);
+
+        return $previous !== null ? $this->formState->getStepEntity($previous->getKey()) : null;
+    }
+
+    /**
+     * @throws EntityNotFoundException
+     * @throws StepNotFoundException
+     */
+    private function getHandleStepEntity(string $key): mixed
+    {
+        $previous = $this->steps->previous($key);
+
+        if ($previous !== null) {
+            $key = $previous->getKey();
+        }
+
+        return $this->formState->getStepEntity($key);
     }
 }

@@ -8,5 +8,5 @@ use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 
 interface FormBuilderInterface
 {
-	public function build(mixed $entity): StepsCollection;
+    public function build(mixed $entity): StepsCollection;
 }

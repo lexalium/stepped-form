@@ -7,6 +7,7 @@ namespace Lexal\SteppedForm;
 use Lexal\SteppedForm\Entity\TemplateDefinition;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
+use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Exception\NoStepsAddedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
@@ -17,6 +18,9 @@ interface SteppedFormInterface
 {
     /**
      * Returns a form data
+     *
+     * @throws FormIsNotStartedException
+     * @throws StepNotFoundException
      */
     public function getEntity(): mixed;
 
@@ -25,10 +29,8 @@ interface SteppedFormInterface
      * If already started will throw AlreadyStartedException exception
      *
      * @throws NoStepsAddedException
-     * @throws StepNotFoundException
      * @throws AlreadyStartedException
      * @throws SteppedFormErrorsException
-     * @throws EntityNotFoundException
      */
     public function start(mixed $entity): ?Step;
 
@@ -38,6 +40,7 @@ interface SteppedFormInterface
      * @throws StepNotFoundException
      * @throws StepNotRenderableException
      * @throws EntityNotFoundException
+     * @throws FormIsNotStartedException
      */
     public function render(string $key): TemplateDefinition;
 
@@ -47,11 +50,14 @@ interface SteppedFormInterface
      * @throws StepNotFoundException
      * @throws SteppedFormErrorsException
      * @throws EntityNotFoundException
+     * @throws FormIsNotStartedException
      */
     public function handle(string $key, mixed $data): ?Step;
 
     /**
      * Cancels current form session
+     *
+     * @throws FormIsNotStartedException
      */
     public function cancel(): void;
 }

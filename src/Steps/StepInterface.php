@@ -11,8 +11,8 @@ interface StepInterface
     /**
      * Handling step submit request
      * Returns a data that will be passed to the storage
-	 *
-	 * $data will have null value when the step is not renderable
+     *
+     * $data will have null value when the step is not renderable
      *
      * @throws StepHandleException
      */

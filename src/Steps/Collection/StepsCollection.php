@@ -30,7 +30,9 @@ class StepsCollection implements Countable, IteratorAggregate
     public function __construct(array $steps)
     {
         $this->steps = array_filter($steps, static fn (mixed $step) => $step instanceof Step);
-        $this->keys = array_map(static fn (Step $step) => $step->getKey(), $this->steps);
+
+        $keys = array_map(static fn (Step $step) => $step->getKey(), $this->steps);
+        $this->keys = array_combine($keys, $keys);
     }
 
     /**
@@ -52,13 +54,7 @@ class StepsCollection implements Countable, IteratorAggregate
     {
         $index = $this->getIndex($key);
 
-        if ($index === null) {
-            throw new StepNotFoundException($key);
-        }
-
-        $index++;
-
-        return $this->steps[$index] ?? null;
+        return $this->steps[++$index] ?? null;
     }
 
     /**
@@ -68,18 +64,12 @@ class StepsCollection implements Countable, IteratorAggregate
     {
         $index = $this->getIndex($key);
 
-        if ($index === null) {
-            throw new StepNotFoundException($key);
-        }
-
-        $index--;
-
-        return $this->steps[$index] ?? null;
+        return $this->steps[--$index] ?? null;
     }
 
     public function has(string $key): bool
     {
-        return in_array($key, $this->keys, true);
+        return isset($this->keys[$key]);
     }
 
     /**
@@ -111,10 +101,17 @@ class StepsCollection implements Countable, IteratorAggregate
         return new ArrayIterator(array_combine($this->keys, $this->steps));
     }
 
-    private function getIndex(string $key): ?int
+    /**
+     * @throws StepNotFoundException
+     */
+    private function getIndex(string $key): int
     {
         $index = array_search($key, $this->keys, true);
 
-        return $index === false ? null : $index;
+        if ($index === false) {
+            throw new StepNotFoundException($key);
+        }
+
+        return $index;
     }
 }

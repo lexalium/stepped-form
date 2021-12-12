@@ -9,22 +9,22 @@ use Lexal\SteppedForm\Exception\CurrentStepNotFoundException;
 
 class StepControl implements StepControlInterface
 {
-    public function __construct(
-        private StorageInterface $storage,
-        private string $namespace,
-    ) {
+    private const STORAGE_KEY = 'current-step';
+
+    public function __construct(private StorageInterface $storage)
+    {
     }
 
     public function setCurrent(string $key): StepControlInterface
     {
-        $this->storage->put($this->getKey(), $key);
+        $this->storage->put(self::STORAGE_KEY, $key);
 
         return $this;
     }
 
     public function getCurrent(): string
     {
-        $current = $this->storage->get($this->getKey());
+        $current = $this->storage->get(self::STORAGE_KEY);
 
         if ($current === null) {
             throw new CurrentStepNotFoundException();
@@ -35,20 +35,15 @@ class StepControl implements StepControlInterface
 
     public function hasCurrent(): bool
     {
-        $current = $this->storage->get($this->getKey());
+        $current = $this->storage->get(self::STORAGE_KEY);
 
         return $current !== null;
     }
 
     public function reset(): StepControlInterface
     {
-        $this->storage->forget($this->getKey());
+        $this->storage->forget(self::STORAGE_KEY);
 
         return $this;
-    }
-
-    private function getKey(): string
-    {
-        return "{$this->namespace}.current-step";
     }
 }

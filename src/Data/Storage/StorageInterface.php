@@ -17,6 +17,13 @@ interface StorageInterface
     public function get(string $key, mixed $default = null): mixed;
 
     /**
+     * Returns array of the keys added to the storage
+     *
+     * @return string[]
+     */
+    public function keys(): array;
+
+    /**
      * Checks if the storage contains data with the given key
      */
     public function has(string $key): bool;
@@ -25,4 +32,9 @@ interface StorageInterface
      * Removes data from the storage by the given key
      */
     public function forget(string $key): self;
+
+    /**
+     * Removes all form data from the storage
+     */
+    public function clear(): self;
 }

@@ -29,10 +29,11 @@ class StepsCollection implements Countable, IteratorAggregate
      */
     public function __construct(array $steps)
     {
-        $this->steps = array_filter($steps, static fn (mixed $step) => $step instanceof Step);
+        $steps = array_filter($steps, static fn (mixed $step) => $step instanceof Step);
+        $keys = array_map(static fn (Step $step) => $step->getKey(), $steps);
 
-        $keys = array_map(static fn (Step $step) => $step->getKey(), $this->steps);
-        $this->keys = array_combine($keys, $keys);
+        $this->steps = array_combine($keys, $steps);
+        $this->keys = array_values($keys);
     }
 
     /**
@@ -44,7 +45,7 @@ class StepsCollection implements Countable, IteratorAggregate
             throw new NoStepsAddedException();
         }
 
-        return $this->steps[0];
+        return reset($this->steps);
     }
 
     /**
@@ -54,7 +55,15 @@ class StepsCollection implements Countable, IteratorAggregate
     {
         $index = $this->getIndex($key);
 
-        return $this->steps[++$index] ?? null;
+        $index++;
+
+        if (!isset($this->keys[$index])) {
+            return null;
+        }
+
+        $nextKey = $this->keys[$index];
+
+        return $this->steps[$nextKey] ?? null;
     }
 
     /**
@@ -64,12 +73,20 @@ class StepsCollection implements Countable, IteratorAggregate
     {
         $index = $this->getIndex($key);
 
-        return $this->steps[--$index] ?? null;
+        $index--;
+
+        if ($index < 0 || !isset($this->keys[$index])) {
+            return null;
+        }
+
+        $previousKey = $this->keys[$index];
+
+        return $this->steps[$previousKey] ?? null;
     }
 
     public function has(string $key): bool
     {
-        return isset($this->keys[$key]);
+        return isset($this->steps[$key]);
     }
 
     /**
@@ -98,7 +115,7 @@ class StepsCollection implements Countable, IteratorAggregate
 
     public function getIterator(): Traversable
     {
-        return new ArrayIterator(array_combine($this->keys, $this->steps));
+        return new ArrayIterator($this->steps);
     }
 
     /**

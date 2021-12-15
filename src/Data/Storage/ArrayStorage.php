@@ -17,7 +17,7 @@ class ArrayStorage implements StorageInterface
 
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->data[$key] ?? null;
+        return $this->data[$key] ?? $default;
     }
 
     public function keys(): array

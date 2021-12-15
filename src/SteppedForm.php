@@ -22,6 +22,7 @@ use Lexal\SteppedForm\Steps\RenderStepInterface;
 class SteppedForm implements SteppedFormInterface
 {
     private StepsCollection $steps;
+    private bool $built = false;
 
     public function __construct(
         private FormStateInterface $formState,
@@ -45,7 +46,7 @@ class SteppedForm implements SteppedFormInterface
      */
     public function start(mixed $entity): ?Step
     {
-        $this->build($entity);
+        $this->rebuild($entity);
         $this->formState->initialize($entity, $this->steps);
 
         $step = $this->steps->first();
@@ -56,13 +57,13 @@ class SteppedForm implements SteppedFormInterface
     public function render(string $key): TemplateDefinition
     {
         $this->build($this->getEntity());
-        $step = $this->steps->get($key);
+        $step = $this->steps->get($key)->getStep();
 
-        if (!$step->getStep() instanceof RenderStepInterface) {
+        if (!$step instanceof RenderStepInterface) {
             throw new StepNotRenderableException($key);
         }
 
-        return $step->getStep()->getTemplateDefinition($this->getCurrentOrPreviousStepEntity($key));
+        return $step->getTemplateDefinition($this->getCurrentOrPreviousStepEntity($key));
     }
 
     public function handle(string $key, mixed $data): ?Step
@@ -70,13 +71,14 @@ class SteppedForm implements SteppedFormInterface
         $this->build($this->getEntity());
         $step = $this->steps->get($key);
 
+        $entity = $this->getHandleStepEntity($key);
+
         /** @var BeforeHandleStep $event */
-        $event = $this->dispatcher->dispatch(new BeforeHandleStep($data, $step));
+        $event = $this->dispatcher->dispatch(new BeforeHandleStep($data, $entity, $step));
 
-        $entity = $step->getStep()->handle($this->getHandleStepEntity($key), $event->data);
+        $entity = $step->getStep()->handle($entity, $event->data);
 
-        $this->build($entity);
-
+        $this->rebuild($entity);
         $next = $this->steps->next($step->getKey());
 
         $this->formState->handle($step->getKey(), $entity, $next);
@@ -99,7 +101,16 @@ class SteppedForm implements SteppedFormInterface
 
     private function build(mixed $entity): void
     {
-        $this->steps = $this->builder->build($entity);
+        if (!$this->built) {
+            $this->steps = $this->builder->build($entity);
+            $this->built = true;
+        }
+    }
+
+    private function rebuild(mixed $entity): void
+    {
+        $this->built = false;
+        $this->build($entity);
     }
 
     /**

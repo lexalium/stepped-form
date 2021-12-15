@@ -12,6 +12,7 @@ use Lexal\SteppedForm\Steps\StepInterface;
 class StepsBuilder implements StepsBuilderInterface
 {
     private const DEFAULT_INDEX = 0;
+    private const SLICE_OFFSET = 0;
 
     /**
      * @var Step[]
@@ -50,7 +51,7 @@ class StepsBuilder implements StepsBuilderInterface
 
         $index = $this->getIndex($before);
 
-        return $this->addToIndex($index - 1, $key, $step);
+        return $this->addToIndex($index, $key, $step);
     }
 
     public function merge(StepsCollection $collection): self
@@ -91,9 +92,9 @@ class StepsBuilder implements StepsBuilderInterface
     private function addToIndex(int $index, string $key, StepInterface $step): self
     {
         $this->steps = array_replace(
-            array_slice($this->steps, 0, $index, true),
+            array_slice($this->steps, self::SLICE_OFFSET, $index, true),
             [$key => new Step($key, $step)],
-            array_slice($this->steps, $index, null, true)
+            array_slice($this->steps, $index, null, true),
         );
 
         return $this;

@@ -8,7 +8,10 @@ use Lexal\SteppedForm\Steps\Collection\Step;
 
 class BeforeHandleStep
 {
-    public function __construct(public mixed $data, public Step $step)
-    {
+    public function __construct(
+        public mixed $data,
+        public mixed $entity,
+        public Step $step,
+    ) {
     }
 }

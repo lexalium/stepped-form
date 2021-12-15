@@ -6,7 +6,7 @@ namespace Lexal\SteppedForm\EventDispatcher\Event;
 
 class FormFinished
 {
-    public function __construct(public mixed $data)
+    public function __construct(public mixed $entity)
     {
     }
 }

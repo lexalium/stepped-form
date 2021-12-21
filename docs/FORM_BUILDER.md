@@ -1,4 +1,4 @@
-# Form Builder
+## Form Builder
 
 The Stepped Form uses a Form Builder for building a Steps Collection by 
 the form entity.

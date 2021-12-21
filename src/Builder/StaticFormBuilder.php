@@ -6,7 +6,7 @@ namespace Lexal\SteppedForm\Builder;
 
 use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 
-class StaticCollectionBuilder implements FormBuilderInterface
+class StaticFormBuilder implements FormBuilderInterface
 {
     public function __construct(private StepsCollection $collection)
     {

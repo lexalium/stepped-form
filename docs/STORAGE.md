@@ -1,7 +1,5 @@
 # Storage
 
----
-
 A storage stores the current step and data handled by each step. You can
 create your own storage by implementing a 
 `Lexal\SteppedForm\Data\Storage\StorageInterface` interface. And 

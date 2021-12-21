@@ -1,7 +1,5 @@
 # PHP Implementation of the Stepped Form
 
----
-
 With this package you can create a Stepped Form and render or handle
 its steps.
 
@@ -16,9 +14,9 @@ its steps.
 3. [Stepped Form Builder](docs/FORM_BUILDER.md).
 4. [How To Use](docs/USAGE.md).
 
-## License
-
 ---
+
+## License
 
 Stepped Form is licensed under the MIT License. See
 [LICENSE](LICENSE) for the full license text.

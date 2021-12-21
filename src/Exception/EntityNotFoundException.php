@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Exception;
 
+use function sprintf;
+
 class EntityNotFoundException extends SteppedFormException
 {
     public function __construct(string $key)

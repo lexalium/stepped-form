@@ -30,6 +30,8 @@ interface FormStateInterface
     /**
      * Initializes a new form state. Saves entity to the storage and a first step key
      *
+     * @param StepsCollection<Step> $steps
+     *
      * @throws AlreadyStartedException
      * @throws NoStepsAddedException
      */

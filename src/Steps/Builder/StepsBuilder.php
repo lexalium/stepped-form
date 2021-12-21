@@ -9,6 +9,13 @@ use Lexal\SteppedForm\Steps\Collection\Step;
 use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 use Lexal\SteppedForm\Steps\StepInterface;
 
+use function array_merge;
+use function array_keys;
+use function array_replace;
+use function array_search;
+use function array_slice;
+use function iterator_to_array;
+
 class StepsBuilder implements StepsBuilderInterface
 {
     private const DEFAULT_INDEX = 0;

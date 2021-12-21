@@ -6,6 +6,10 @@ namespace Lexal\SteppedForm\Data;
 
 use Lexal\SteppedForm\Data\Storage\StorageInterface;
 
+use function array_pop;
+use function array_search;
+use function array_slice;
+
 class FormDataStorage implements FormDataStorageInterface
 {
     public function __construct(private StorageInterface $storage)
@@ -69,7 +73,7 @@ class FormDataStorage implements FormDataStorageInterface
             return $this;
         }
 
-        foreach (array_slice($keys, $index) as $forgetKey) {
+        foreach (array_slice($keys, (int)$index) as $forgetKey) {
             $this->forget($forgetKey);
         }
 

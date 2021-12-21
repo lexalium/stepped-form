@@ -14,7 +14,10 @@
     },
     "require-dev": {
         "roave/security-advisories": "dev-latest",
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "phpstan/phpstan": "^1.2",
+        "webimpress/coding-standard": "^1.2",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1"
     },
     "autoload": {
         "psr-4": {

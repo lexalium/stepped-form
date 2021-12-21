@@ -14,12 +14,14 @@ use Lexal\SteppedForm\SteppedForm;
 use Lexal\SteppedForm\SteppedFormInterface;
 use Lexal\SteppedForm\Steps\Collection\Step;
 use Lexal\SteppedForm\Steps\Collection\StepsCollection;
-use Lexal\SteppedForm\Steps\RenderStepInterface;
-use Lexal\SteppedForm\Steps\StepInterface;
 use Lexal\SteppedForm\Tests\Steps\RenderStep;
 use Lexal\SteppedForm\Tests\Steps\SimpleStep;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+
+use function array_fill;
+use function array_filter;
+use function array_map;
 
 class SteppedFormTest extends TestCase
 {
@@ -28,9 +30,9 @@ class SteppedFormTest extends TestCase
     ];
 
     private SteppedFormInterface $form;
-    private FormStateInterface|MockObject $formState;
-    private FormBuilderInterface|MockObject $builder;
-    private EventDispatcherInterface|MockObject $dispatcher;
+    private MockObject $formState;
+    private MockObject $builder;
+    private MockObject $dispatcher;
 
     public function testStart(): void
     {
@@ -58,8 +60,8 @@ class SteppedFormTest extends TestCase
     {
         $expected = new Step('key2', new RenderStep());
         $collection = new StepsCollection([
-            new Step('key', $this->createHandleStep(StepInterface::class, self::SIMPLE_ENTITY)),
-            new Step('key3', $this->createHandleStep(StepInterface::class, self::SIMPLE_ENTITY)),
+            new Step('key', new SimpleStep(self::SIMPLE_ENTITY)),
+            new Step('key3', new SimpleStep(self::SIMPLE_ENTITY)),
             new Step('key2', new RenderStep()),
         ]);
 
@@ -74,11 +76,11 @@ class SteppedFormTest extends TestCase
             self::SIMPLE_ENTITY,
             null,
             [
-                new Step('key', $this->createHandleStep(StepInterface::class, self::SIMPLE_ENTITY)),
-                new Step('key3', $this->createHandleStep(StepInterface::class, self::SIMPLE_ENTITY)),
+                new Step('key', new SimpleStep(self::SIMPLE_ENTITY)),
+                new Step('key3', new SimpleStep(self::SIMPLE_ENTITY)),
             ],
             [
-                new Step('key3', $this->createHandleStep(StepInterface::class, self::SIMPLE_ENTITY)),
+                new Step('key3', new SimpleStep(self::SIMPLE_ENTITY)),
                 $expected,
             ],
             ['key', 'key'],
@@ -168,7 +170,7 @@ class SteppedFormTest extends TestCase
 
         $expected = new Step('key3', new RenderStep());
         $collection = new StepsCollection([
-            new Step('key', $this->createHandleStep(RenderStepInterface::class, $entity)),
+            new Step('key', new RenderStep(handleReturn: $entity)),
             new Step('key3', new RenderStep()),
             new Step('key2', new RenderStep()),
         ]);
@@ -183,7 +185,7 @@ class SteppedFormTest extends TestCase
             'key',
             $entity,
             $data,
-            [new Step('key', $this->createHandleStep(RenderStepInterface::class, $entity))],
+            [new Step('key', new RenderStep(handleReturn: $entity))],
             [$expected],
             ['key'],
         );
@@ -206,6 +208,11 @@ class SteppedFormTest extends TestCase
         parent::setUp();
     }
 
+    /**
+     * @param Step[] $stepsForHandle
+     * @param Step[] $nextSteps
+     * @param string[] $keysForGetStepEntity
+     */
     private function testHandleWithCount(
         int $count,
         string $key,
@@ -249,15 +256,5 @@ class SteppedFormTest extends TestCase
                 $keys,
                 $nextSteps,
             ));
-    }
-
-    private function createHandleStep(string $className, mixed $return): StepInterface|MockObject
-    {
-        $step = $this->createMock($className);
-
-        $step->method('handle')
-            ->willReturn($return);
-
-        return $step;
     }
 }

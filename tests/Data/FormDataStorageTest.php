@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 class FormDataStorageTest extends TestCase
 {
-    private StorageInterface|MockObject $storage;
+    private MockObject $storage;
     private FormDataStorageInterface $formData;
 
     public function testGetLastWithData(): void

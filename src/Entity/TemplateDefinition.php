@@ -6,6 +6,9 @@ namespace Lexal\SteppedForm\Entity;
 
 class TemplateDefinition
 {
+    /**
+     * @param array<string|int, mixed> $data
+     */
     public function __construct(
         private string $template,
         private array $data = [],
@@ -17,6 +20,9 @@ class TemplateDefinition
         return $this->template;
     }
 
+    /**
+     * @return array<string|int, mixed>
+     */
     public function getData(): array
     {
         return $this->data;

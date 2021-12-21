@@ -15,7 +15,7 @@ class StepControlTest extends TestCase
 {
     private const STORAGE_KEY = 'current-step';
 
-    private StorageInterface|MockObject $storage;
+    private MockObject $storage;
     private StepControlInterface $stepControl;
 
     public function testSetCurrent(): void

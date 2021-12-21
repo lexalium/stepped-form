@@ -20,8 +20,8 @@ use PHPUnit\Framework\TestCase;
 
 class FormStateTest extends TestCase
 {
-    private StepControlInterface|MockObject $stepControl;
-    private FormDataStorageInterface|MockObject $formData;
+    private MockObject $stepControl;
+    private MockObject $formData;
     private FormStateInterface $formState;
 
     public function testGetEntity(): void

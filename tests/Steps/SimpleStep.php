@@ -8,8 +8,12 @@ use Lexal\SteppedForm\Steps\StepInterface;
 
 class SimpleStep implements StepInterface
 {
+    public function __construct(private mixed $handleReturn = null)
+    {
+    }
+
     public function handle(mixed $entity, mixed $data): mixed
     {
-        return $entity;
+        return $this->handleReturn ?: $entity;
     }
 }

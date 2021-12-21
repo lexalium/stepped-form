@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Data\Storage;
 
+use function array_keys;
+
 class ArrayStorage implements StorageInterface
 {
+    /**
+     * @var array<string, mixed>
+     */
     private array $data = [];
 
     public function put(string $key, mixed $data): StorageInterface

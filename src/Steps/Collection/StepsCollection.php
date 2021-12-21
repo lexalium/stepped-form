@@ -12,6 +12,14 @@ use Countable;
 use IteratorAggregate;
 use Traversable;
 
+use function array_combine;
+use function array_filter;
+use function array_map;
+use function array_search;
+use function array_values;
+use function count;
+use function reset;
+
 class StepsCollection implements Countable, IteratorAggregate
 {
     /**
@@ -41,11 +49,13 @@ class StepsCollection implements Countable, IteratorAggregate
      */
     public function first(): Step
     {
-        if ($this->count() === 0) {
+        $first = reset($this->steps);
+
+        if ($first === false) {
             throw new NoStepsAddedException();
         }
 
-        return reset($this->steps);
+        return $first;
     }
 
     /**
@@ -101,6 +111,9 @@ class StepsCollection implements Countable, IteratorAggregate
         return $this->steps[$key];
     }
 
+    /**
+     * @return StepsCollection<Step>
+     */
     public function getTitled(): self
     {
         return new self(array_filter($this->steps, static function (Step $step) {
@@ -113,6 +126,9 @@ class StepsCollection implements Countable, IteratorAggregate
         return count($this->steps);
     }
 
+    /**
+     * @return Traversable<string, Step>
+     */
     public function getIterator(): Traversable
     {
         return new ArrayIterator($this->steps);
@@ -129,6 +145,6 @@ class StepsCollection implements Countable, IteratorAggregate
             throw new StepNotFoundException($key);
         }
 
-        return $index;
+        return (int)$index;
     }
 }

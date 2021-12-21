@@ -4,7 +4,7 @@
 
 1. Create a Step.
 
-```injectablephp
+```php
 <?php
 
 use Lexal\SteppedForm\Steps\StepInterface;
@@ -20,10 +20,10 @@ class CustomerStep implements StepInterface
 }
 ```
 
-2. Create a Builder class which will build and return a
+2. Create a [Builder](FORM_BUILDER.md) class which will build and return a
       StepsCollection instance.
 
-```injectablephp
+```php
 <?php
 
 use Lexal\SteppedForm\Builder\FormBuilderInterface;
@@ -52,7 +52,7 @@ $builder = new CustomBuilder(new StepsBuilder());
 
 3. Create a [Form State](FORM_STATE.md) instance.
 
-```injectablephp
+```php
 <?php
 
 use Lexal\SteppedForm\Data\FormDataStorage;
@@ -68,7 +68,7 @@ $formState = new FormState(
 
 4. Create an Event Dispatcher.
 
-```injectablephp
+```php
 <?php
 
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
@@ -88,7 +88,7 @@ $dispatcher = new EventDispatcher();
 
 5. Create a Stepped Form instance.
 
-```injectablephp
+```php
 <?php
 
 use Lexal\SteppedForm\SteppedForm;
@@ -102,7 +102,7 @@ $form = new SteppedForm(
 
 6. Use Stepped Form in the application.
 
-```injectablephp
+```php
 <?php
 
 /* Starts a new form session */

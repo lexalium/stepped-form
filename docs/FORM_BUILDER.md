@@ -8,7 +8,7 @@ the form entity.
 If a Steps Collection will always have a fixed list of steps you can use a
 `Lexal\SteppedForm\Builder\StaticFormBuilder` builder. For example:
 
-```injectablephp
+```php
 <?php
 
 use Lexal\SteppedForm\Builder\StaticFormBuilder;

@@ -7,6 +7,14 @@ its steps.
 
 **PHP:** ^8.0
 
+## Installation
+
+Via Composer
+
+```
+composer require lexal/stepped-form
+```
+
 ## Resources
 
 1. [Stepped Form Storage](docs/STORAGE.md).

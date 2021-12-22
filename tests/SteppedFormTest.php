@@ -22,6 +22,7 @@ use PHPUnit\Framework\TestCase;
 use function array_fill;
 use function array_filter;
 use function array_map;
+use function count;
 
 class SteppedFormTest extends TestCase
 {
@@ -83,7 +84,8 @@ class SteppedFormTest extends TestCase
                 new Step('key3', new SimpleStep(self::SIMPLE_ENTITY)),
                 $expected,
             ],
-            ['key', 'key'],
+            ['key'],
+            true,
         );
 
         $this->assertEquals($expected, $this->form->start(self::SIMPLE_ENTITY));
@@ -104,6 +106,11 @@ class SteppedFormTest extends TestCase
             ->method('build')
             ->with(self::SIMPLE_ENTITY)
             ->willReturn($collection);
+
+        $this->formState->expects($this->once())
+            ->method('hasStepEntity')
+            ->with('key')
+            ->willReturn(true);
 
         $this->formState->expects($this->once())
             ->method('getStepEntity')
@@ -132,10 +139,15 @@ class SteppedFormTest extends TestCase
             ->with(self::SIMPLE_ENTITY)
             ->willReturn($collection);
 
-        $this->formState->expects($this->exactly(2))
+        $this->formState->expects($this->once())
+            ->method('hasStepEntity')
+            ->with('key2')
+            ->willReturn(false);
+
+        $this->formState->expects($this->once())
             ->method('getStepEntity')
-            ->withConsecutive(['key2'], ['key'])
-            ->willReturnOnConsecutiveCalls(null, self::SIMPLE_ENTITY);
+            ->with('key')
+            ->willReturn(self::SIMPLE_ENTITY);
 
         $expected = new TemplateDefinition('test', [self::SIMPLE_ENTITY]);
         $definition = $this->form->render('key2');
@@ -187,7 +199,8 @@ class SteppedFormTest extends TestCase
             $data,
             [new Step('key', new RenderStep(handleReturn: $entity))],
             [$expected],
-            ['key'],
+            [],
+            true,
         );
 
         $this->assertEquals($expected, $this->form->handle('key', $data));
@@ -221,18 +234,25 @@ class SteppedFormTest extends TestCase
         array $stepsForHandle,
         array $nextSteps,
         array $keysForGetStepEntity,
+        bool $isGetInitializeEntityCalled,
     ): void {
         $this->formState->expects($this->exactly($count))
             ->method('getEntity')
             ->willReturn(self::SIMPLE_ENTITY);
 
-        $this->formState->expects($this->exactly($count))
+        $this->formState->expects($this->exactly(count($keysForGetStepEntity)))
             ->method('getStepEntity')
             ->withConsecutive(...array_map(
                 static fn (string $key) => [$key],
                 $keysForGetStepEntity,
             ))
             ->willReturnOnConsecutiveCalls(...array_fill(0, $count, self::SIMPLE_ENTITY));
+
+        if ($isGetInitializeEntityCalled) {
+            $this->formState->expects($this->once())
+                ->method('getInitializeEntity')
+                ->willReturn(self::SIMPLE_ENTITY);
+        }
 
         $events = array_map(
             static fn (Step $step) => new BeforeHandleStep($data, self::SIMPLE_ENTITY, $step),

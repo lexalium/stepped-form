@@ -7,7 +7,7 @@ namespace Lexal\SteppedForm\Steps;
 interface TitleStepInterface extends RenderStepInterface
 {
     /**
-     * Returns a title of the step
+     * Returns a title of the step.
      */
     public function getTitle(): string;
 }

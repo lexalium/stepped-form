@@ -17,15 +17,15 @@ use Lexal\SteppedForm\Steps\Collection\Step;
 interface SteppedFormInterface
 {
     /**
-     * Returns a form data
+     * Returns a form data.
      *
      * @throws FormIsNotStartedException
      */
     public function getEntity(): mixed;
 
     /**
-     * Starts a new form session and return a first Step
-     * If already started will throw AlreadyStartedException exception
+     * Starts a new form session and return a first Step.
+     * If already started will throw AlreadyStartedException exception.
      *
      * @throws NoStepsAddedException
      * @throws AlreadyStartedException
@@ -34,7 +34,7 @@ interface SteppedFormInterface
     public function start(mixed $entity): ?Step;
 
     /**
-     * Returns a Template Definition for given step
+     * Returns a Template Definition for given step.
      *
      * @throws StepNotFoundException
      * @throws StepNotRenderableException
@@ -44,7 +44,7 @@ interface SteppedFormInterface
     public function render(string $key): TemplateDefinition;
 
     /**
-     * Handles a form step and returns next step or null when there is no next step
+     * Handles a form step and returns next step or null when there is no next step.
      *
      * @throws StepNotFoundException
      * @throws SteppedFormErrorsException
@@ -54,7 +54,7 @@ interface SteppedFormInterface
     public function handle(string $key, mixed $data): ?Step;
 
     /**
-     * Cancels current form session
+     * Cancels current form session.
      *
      * @throws FormIsNotStartedException
      */

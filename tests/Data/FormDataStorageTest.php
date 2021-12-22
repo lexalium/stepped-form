@@ -7,6 +7,7 @@ namespace Lexal\SteppedForm\Tests\Data;
 use Lexal\SteppedForm\Data\FormDataStorage;
 use Lexal\SteppedForm\Data\FormDataStorageInterface;
 use Lexal\SteppedForm\Data\Storage\StorageInterface;
+use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -31,11 +32,13 @@ class FormDataStorageTest extends TestCase
 
     public function testGetLastWithoutData(): void
     {
+        $this->expectExceptionObject(new KeysNotFoundInStorageException());
+
         $this->storage->expects($this->once())
             ->method('keys')
             ->willReturn([]);
 
-        $this->assertEquals(null, $this->formData->getLast());
+        $this->formData->getLast();
     }
 
     public function testForgetAfterWithData(): void

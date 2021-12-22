@@ -10,12 +10,15 @@ use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\CurrentStepNotFoundException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Steps\Collection\Step;
 use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 
 class FormState implements FormStateInterface
 {
+    private const KEY_INITIALIZE_ENTITY = '__INITIALIZE__';
+
     public function __construct(
         private FormDataStorageInterface $formData,
         private StepControlInterface $stepControl,
@@ -28,18 +31,36 @@ class FormState implements FormStateInterface
             throw new FormIsNotStartedException();
         }
 
-        return $this->formData->getLast();
+        try {
+            $entity = $this->formData->getLast();
+        } catch (KeysNotFoundInStorageException) {
+            $entity = $this->getInitializeEntity();
+        }
+
+        return $entity;
     }
 
     public function getStepEntity(string $key): mixed
     {
-        $entity = $this->formData->get($key);
-
-        if ($entity === null) {
+        if (!$this->hasStepEntity($key)) {
             throw new EntityNotFoundException($key);
         }
 
-        return $entity;
+        return $this->formData->get($key);
+    }
+
+    public function hasStepEntity(string $key): bool
+    {
+        return $this->formData->has($key);
+    }
+
+    public function getInitializeEntity(): mixed
+    {
+        if (!$this->stepControl->hasCurrent()) {
+            throw new FormIsNotStartedException();
+        }
+
+        return $this->formData->get(self::KEY_INITIALIZE_ENTITY);
     }
 
     public function initialize(mixed $entity, StepsCollection $steps): void
@@ -60,7 +81,8 @@ class FormState implements FormStateInterface
 
         $step = $steps->first();
 
-        $this->formData->put($step->getKey(), $entity);
+        $this->formData->clear();
+        $this->formData->put(self::KEY_INITIALIZE_ENTITY, $entity);
         $this->stepControl->setCurrent($step->getKey());
     }
 

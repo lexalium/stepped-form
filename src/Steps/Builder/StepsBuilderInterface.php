@@ -12,38 +12,38 @@ use Lexal\SteppedForm\Steps\StepInterface;
 interface StepsBuilderInterface
 {
     /**
-     * Adds a new step to the collection
+     * Adds a new step to the collection.
      */
     public function add(string $key, StepInterface $step): self;
 
     /**
-     * Adds a new step after given one
+     * Adds a new step after given one.
      *
      * @throws StepNotFoundException
      */
     public function addAfter(string $after, string $key, StepInterface $step): self;
 
     /**
-     * Adds a new step before given one
+     * Adds a new step before given one.
      *
      * @throws StepNotFoundException
      */
     public function addBefore(string $before, string $key, StepInterface $step): self;
 
     /**
-     * Merge two collections to the one
+     * Merge two collections to the one.
      *
      * @param StepsCollection<Step> $collection
      */
     public function merge(StepsCollection $collection): self;
 
     /**
-     * Removes step from the collection
+     * Removes step from the collection.
      */
     public function remove(string $key): self;
 
     /**
-     * Builds a new steps collection
+     * Builds a new steps collection.
      *
      * @return StepsCollection<Step>
      */

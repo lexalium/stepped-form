@@ -10,7 +10,7 @@ use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 interface FormBuilderInterface
 {
     /**
-     * Build a StepsCollection by the form entity
+     * Build a StepsCollection by the form entity.
      *
      * @return StepsCollection<Step>
      */

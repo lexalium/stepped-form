@@ -10,6 +10,7 @@ use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\CurrentStepNotFoundException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use Lexal\SteppedForm\State\FormState;
 use Lexal\SteppedForm\State\FormStateInterface;
 use Lexal\SteppedForm\Steps\Collection\Step;
@@ -20,6 +21,8 @@ use PHPUnit\Framework\TestCase;
 
 class FormStateTest extends TestCase
 {
+    private const KEY_INITIALIZE_ENTITY = '__INITIALIZE__';
+
     private MockObject $stepControl;
     private MockObject $formData;
     private FormStateInterface $formState;
@@ -32,6 +35,24 @@ class FormStateTest extends TestCase
 
         $this->formData->expects($this->once())
             ->method('getLast')
+            ->willReturn('value');
+
+        $this->assertEquals('value', $this->formState->getEntity());
+    }
+
+    public function testGetEntityFromInitializeEntity(): void
+    {
+        $this->stepControl->expects($this->exactly(2))
+            ->method('hasCurrent')
+            ->willReturn(true);
+
+        $this->formData->expects($this->once())
+            ->method('getLast')
+            ->willThrowException(new KeysNotFoundInStorageException());
+
+        $this->formData->expects($this->once())
+            ->method('get')
+            ->with(self::KEY_INITIALIZE_ENTITY)
             ->willReturn('value');
 
         $this->assertEquals('value', $this->formState->getEntity());
@@ -54,6 +75,10 @@ class FormStateTest extends TestCase
     public function testGetStepEntity(): void
     {
         $this->formData->expects($this->once())
+            ->method('has')
+            ->willReturn(true);
+
+        $this->formData->expects($this->once())
             ->method('get')
             ->willReturn('value');
 
@@ -65,8 +90,8 @@ class FormStateTest extends TestCase
         $this->expectExceptionObject(new EntityNotFoundException('key'));
 
         $this->formData->expects($this->once())
-            ->method('get')
-            ->willReturn(null);
+            ->method('has')
+            ->willReturn(false);
 
         $this->formState->getStepEntity('key');
     }
@@ -74,8 +99,11 @@ class FormStateTest extends TestCase
     public function testInitializeWithEmptyState(): void
     {
         $this->formData->expects($this->once())
+            ->method('clear');
+
+        $this->formData->expects($this->once())
             ->method('put')
-            ->with('key', 'value');
+            ->with(self::KEY_INITIALIZE_ENTITY, 'value');
 
         $this->stepControl->expects($this->once())
             ->method('setCurrent')

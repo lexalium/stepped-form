@@ -133,41 +133,38 @@ class SteppedForm implements SteppedFormInterface
     /**
      * @throws EntityNotFoundException
      * @throws StepNotFoundException
+     * @throws FormIsNotStartedException
      */
     private function getCurrentOrPreviousStepEntity(string $key): mixed
     {
-        $entity = $this->formState->getStepEntity($key);
+        if (!$this->formState->hasStepEntity($key)) {
+            $previous = $this->steps->previous($key);
 
-        if ($entity === null) {
-            $entity = $this->getPreviousStepEntity($key);
+            if ($previous === null) {
+                return $this->formState->getInitializeEntity();
+            }
+
+            $key = $previous->getKey();
         }
 
-        return $entity;
+        return $this->formState->getStepEntity($key);
     }
 
     /**
      * @throws EntityNotFoundException
      * @throws StepNotFoundException
-     */
-    private function getPreviousStepEntity(string $key): mixed
-    {
-        $previous = $this->steps->previous($key);
-
-        return $previous !== null ? $this->formState->getStepEntity($previous->getKey()) : null;
-    }
-
-    /**
-     * @throws EntityNotFoundException
-     * @throws StepNotFoundException
+     * @throws FormIsNotStartedException
      */
     private function getHandleStepEntity(string $key): mixed
     {
         $previous = $this->steps->previous($key);
 
         if ($previous !== null) {
-            $key = $previous->getKey();
+            $entity = $this->formState->getStepEntity($previous->getKey());
+        } else {
+            $entity = $this->formState->getInitializeEntity();
         }
 
-        return $this->formState->getStepEntity($key);
+        return $entity;
     }
 }

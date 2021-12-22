@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Data;
 
 use Lexal\SteppedForm\Data\Storage\StorageInterface;
+use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 
 use function array_pop;
 use function array_search;
@@ -57,7 +58,7 @@ class FormDataStorage implements FormDataStorageInterface
         $keys = $this->keys();
 
         if (!$keys) {
-            return null;
+            throw new KeysNotFoundInStorageException();
         }
 
         return $this->get(array_pop($keys));

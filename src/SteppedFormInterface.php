@@ -20,7 +20,6 @@ interface SteppedFormInterface
      * Returns a form data
      *
      * @throws FormIsNotStartedException
-     * @throws StepNotFoundException
      */
     public function getEntity(): mixed;
 

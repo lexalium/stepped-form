@@ -20,7 +20,8 @@ composer require lexal/stepped-form
 1. [Stepped Form Storage](docs/STORAGE.md).
 2. [Stepped Form State](docs/FORM_STATE.md).
 3. [Stepped Form Builder](docs/FORM_BUILDER.md).
-4. [How To Use](docs/USAGE.md).
+4. [Stepped Form Events](docs/EVENTS.md).
+5. [How To Use](docs/USAGE.md).
 
 ---
 

@@ -37,6 +37,11 @@ class SteppedForm implements SteppedFormInterface
         return $this->formState->getEntity();
     }
 
+    public function getSteps(): StepsCollection
+    {
+        return $this->steps;
+    }
+
     /**
      * @inheritDoc
      *
@@ -63,7 +68,7 @@ class SteppedForm implements SteppedFormInterface
             throw new StepNotRenderableException($key);
         }
 
-        return $step->getTemplateDefinition($this->getCurrentOrPreviousStepEntity($key));
+        return $step->getTemplateDefinition($this->getCurrentOrPreviousStepEntity($key), $this->steps);
     }
 
     public function handle(string $key, mixed $data): ?Step
@@ -76,7 +81,7 @@ class SteppedForm implements SteppedFormInterface
         /** @var BeforeHandleStep $event */
         $event = $this->dispatcher->dispatch(new BeforeHandleStep($data, $entity, $step));
 
-        $entity = $step->getStep()->handle($entity, $event->data);
+        $entity = $step->getStep()->handle($entity, $event->getData());
 
         $this->rebuild($entity);
         $next = $this->steps->next($step->getKey());
@@ -91,7 +96,7 @@ class SteppedForm implements SteppedFormInterface
             return null;
         }
 
-        return $this->prepareRenderStep($next, $event->data);
+        return $this->prepareRenderStep($next, $event->getData());
     }
 
     public function cancel(): void

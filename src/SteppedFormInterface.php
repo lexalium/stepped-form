@@ -13,6 +13,7 @@ use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
 use Lexal\SteppedForm\Steps\Collection\Step;
+use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 
 interface SteppedFormInterface
 {
@@ -22,6 +23,13 @@ interface SteppedFormInterface
      * @throws FormIsNotStartedException
      */
     public function getEntity(): mixed;
+
+    /**
+     * Returns a form steps.
+     *
+     * @return StepsCollection<Step>
+     */
+    public function getSteps(): StepsCollection;
 
     /**
      * Starts a new form session and return a first Step.

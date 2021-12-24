@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Tests\Steps;
 
 use Lexal\SteppedForm\Entity\TemplateDefinition;
+use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 use Lexal\SteppedForm\Steps\RenderStepInterface;
 
 class RenderStep extends SimpleStep implements RenderStepInterface
@@ -14,7 +15,7 @@ class RenderStep extends SimpleStep implements RenderStepInterface
         parent::__construct($handleReturn);
     }
 
-    public function getTemplateDefinition(mixed $entity): TemplateDefinition
+    public function getTemplateDefinition(mixed $entity, StepsCollection $steps): TemplateDefinition
     {
         return new TemplateDefinition($this->template, [$entity]);
     }

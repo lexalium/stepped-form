@@ -8,16 +8,19 @@
             "email": "allapkov@gmail.com"
         }
     ],
+    "keywords": [
+        "stepped-form"
+    ],
     "require": {
         "php": "^8.0",
         "psr/event-dispatcher": "^1.0"
     },
     "require-dev": {
-        "roave/security-advisories": "dev-latest",
-        "phpunit/phpunit": "^9.5",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
         "phpstan/phpstan": "^1.2",
-        "webimpress/coding-standard": "^1.2",
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1"
+        "phpunit/phpunit": "^9.5",
+        "roave/security-advisories": "dev-latest",
+        "webimpress/coding-standard": "^1.2"
     },
     "autoload": {
         "psr-4": {
@@ -28,5 +31,8 @@
         "psr-4": {
             "Lexal\\SteppedForm\\Tests\\": "tests/"
         }
+    },
+    "config": {
+        "sort-packages": true
     }
 }

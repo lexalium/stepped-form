@@ -119,8 +119,8 @@ class StepsBuilder implements StepsBuilderInterface
         return new LazyStep(
             $key,
             $step,
-            fn () => $this->formState->getCurrentStep() === $key,
-            fn () => $this->formState->hasStepEntity($key),
+            fn (): bool => $this->formState->getCurrentStep() === $key,
+            fn (): bool => $this->formState->hasStepEntity($key),
         );
     }
 }

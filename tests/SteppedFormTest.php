@@ -277,7 +277,7 @@ class SteppedFormTest extends TestCase
         $this->formState->expects($this->exactly(count($keysForGetStepEntity)))
             ->method('getStepEntity')
             ->withConsecutive(...array_map(
-                static fn (string $key) => [$key],
+                static fn (string $key): array => [$key],
                 $keysForGetStepEntity,
             ))
             ->willReturnOnConsecutiveCalls(...array_fill(0, $count, self::SIMPLE_ENTITY));
@@ -289,24 +289,24 @@ class SteppedFormTest extends TestCase
         }
 
         $events = array_map(
-            static fn (Step $step) => new BeforeHandleStep($data, self::SIMPLE_ENTITY, $step),
+            static fn (Step $step): BeforeHandleStep => new BeforeHandleStep($data, self::SIMPLE_ENTITY, $step),
             $stepsForHandle,
         );
 
         $this->dispatcher->expects($this->exactly($count))
             ->method('dispatch')
             ->withConsecutive(...array_map(
-                static fn (BeforeHandleStep $event) => [$event],
+                static fn (BeforeHandleStep $event): array => [$event],
                 $events,
             ))
             ->willReturnOnConsecutiveCalls(...$events);
 
-        $keys = [$key] + array_map(static fn (Step $step) => $step->getKey(), array_filter($stepsForHandle));
+        $keys = [$key] + array_map(static fn (Step $step): string => $step->getKey(), array_filter($stepsForHandle));
 
         $this->formState->expects($this->exactly($count))
             ->method('handle')
             ->withConsecutive(...array_map(
-                static fn (string $key, ?Step $nextStep) => [$key, $entityAfterHandle, $nextStep],
+                static fn (string $key, ?Step $nextStep): array => [$key, $entityAfterHandle, $nextStep],
                 $keys,
                 $nextSteps,
             ));

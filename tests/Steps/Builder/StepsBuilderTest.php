@@ -168,8 +168,8 @@ class StepsBuilderTest extends TestCase
         return new LazyStep(
             $key,
             $step,
-            fn () => false,
-            fn () => false,
+            fn (): bool => false,
+            fn (): bool => false,
         );
     }
 }

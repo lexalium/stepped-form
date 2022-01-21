@@ -37,8 +37,8 @@ class StepsCollection implements Countable, IteratorAggregate
      */
     public function __construct(array $steps)
     {
-        $steps = array_filter($steps, static fn (mixed $step) => $step instanceof Step);
-        $keys = array_map(static fn (Step $step) => $step->getKey(), $steps);
+        $steps = array_filter($steps, static fn (mixed $step): bool => $step instanceof Step);
+        $keys = array_map(static fn (Step $step): string => $step->getKey(), $steps);
 
         $this->steps = array_combine($keys, $steps);
         $this->keys = array_values($keys);
@@ -116,9 +116,12 @@ class StepsCollection implements Countable, IteratorAggregate
      */
     public function getTitled(): self
     {
-        return new self(array_filter($this->steps, static function (Step $step) {
-            return $step->getStep() instanceof TitleStepInterface;
-        }));
+        return new self(
+            array_filter(
+                $this->steps,
+                static fn (Step $step): bool => $step->getStep() instanceof TitleStepInterface,
+            ),
+        );
     }
 
     public function count(): int

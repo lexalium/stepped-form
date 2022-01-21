@@ -40,6 +40,11 @@ interface FormStateInterface
     public function getInitializeEntity(): mixed;
 
     /**
+     * Returns current step key, null if not exists.
+     */
+    public function getCurrentStep(): ?string;
+
+    /**
      * Initializes a new form state. Saves entity to the storage and a first step key.
      *
      * @param StepsCollection<Step> $steps

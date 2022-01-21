@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Steps\Builder;
 
+use Closure;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
+use Lexal\SteppedForm\State\FormStateInterface;
+use Lexal\SteppedForm\Steps\Collection\LazyStep;
 use Lexal\SteppedForm\Steps\Collection\Step;
 use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 use Lexal\SteppedForm\Steps\StepInterface;
@@ -26,9 +29,13 @@ class StepsBuilder implements StepsBuilderInterface
      */
     private array $steps = [];
 
+    public function __construct(private FormStateInterface $formState)
+    {
+    }
+
     public function add(string $key, StepInterface $step): self
     {
-        $this->steps[$key] = new Step($key, $step);
+        $this->steps[$key] = $this->createStep($key, $step);
 
         return $this;
     }
@@ -100,10 +107,34 @@ class StepsBuilder implements StepsBuilderInterface
     {
         $this->steps = array_replace(
             array_slice($this->steps, self::SLICE_OFFSET, $index, true),
-            [$key => new Step($key, $step)],
+            [$key => $this->createStep($key, $step)],
             array_slice($this->steps, $index, null, true),
         );
 
         return $this;
+    }
+
+    private function createStep(string $key, StepInterface $step): Step
+    {
+        return new LazyStep(
+            $key,
+            $step,
+            $this->getIsCurrentCallback($key),
+            $this->getIsSubmittedCallback($key),
+        );
+    }
+
+    private function getIsCurrentCallback(string $key): Closure
+    {
+        return function () use ($key) {
+            return $this->formState->getCurrentStep() === $key;
+        };
+    }
+
+    private function getIsSubmittedCallback(string $key): Closure
+    {
+        return function () use ($key) {
+            return $this->formState->hasStepEntity($key);
+        };
     }
 }

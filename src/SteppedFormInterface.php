@@ -9,6 +9,7 @@ use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Exception\NoStepsAddedException;
+use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
@@ -58,6 +59,7 @@ interface SteppedFormInterface
      * @throws SteppedFormErrorsException
      * @throws EntityNotFoundException
      * @throws FormIsNotStartedException
+     * @throws StepIsNotSubmittedException
      */
     public function handle(string $key, mixed $data): ?Step;
 

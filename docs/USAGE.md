@@ -45,7 +45,7 @@ class CustomBuilder implements FormBuilderInterface
     }
 }
 
-$builder = new CustomBuilder(new StepsBuilder());
+$builder = new CustomBuilder(new StepsBuilder(/* FormStateInterface */));
 ```
 
 3. Create a [Form State](FORM_STATE.md) instance.

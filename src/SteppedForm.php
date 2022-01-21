@@ -10,7 +10,10 @@ use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\Event\FormFinished;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
+use Lexal\SteppedForm\Exception\EventDispatcherException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\StepHandleException;
+use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
@@ -48,6 +51,7 @@ class SteppedForm implements SteppedFormInterface
      * @throws FormIsNotStartedException
      * @throws StepNotFoundException
      * @throws EntityNotFoundException
+     * @throws StepIsNotSubmittedException
      */
     public function start(mixed $entity): ?Step
     {
@@ -76,22 +80,14 @@ class SteppedForm implements SteppedFormInterface
         $this->build($this->getEntity());
         $step = $this->steps->get($key);
 
-        $entity = $this->getHandleStepEntity($key);
+        [$entity, $event] = $this->handleStep($step, $data);
 
-        /** @var BeforeHandleStep $event */
-        $event = $this->dispatcher->dispatch(new BeforeHandleStep($data, $entity, $step));
-
-        $entity = $step->getStep()->handle($entity, $event->getData());
-
-        $this->rebuild($entity);
         $next = $this->steps->next($step->getKey());
 
         $this->formState->handle($step->getKey(), $entity, $next);
 
         if ($next === null) {
-            $this->dispatcher->dispatch(new FormFinished($this->getEntity()));
-
-            $this->cancel();
+            $this->finish();
 
             return null;
         }
@@ -119,10 +115,54 @@ class SteppedForm implements SteppedFormInterface
     }
 
     /**
+     * @throws StepIsNotSubmittedException
+     * @throws FormIsNotStartedException
+     * @throws EventDispatcherException
+     * @throws SteppedFormErrorsException
+     */
+    private function finish(): void
+    {
+        foreach ($this->steps as $step) {
+            if (!$step->isSubmitted()) {
+                throw new StepIsNotSubmittedException($step);
+            }
+        }
+
+        $this->dispatcher->dispatch(new FormFinished($this->getEntity()));
+
+        $this->cancel();
+    }
+
+    /**
+     * @return array<mixed|BeforeHandleStep>
+     *
+     * @throws StepHandleException
+     * @throws FormIsNotStartedException
+     * @throws EntityNotFoundException
+     * @throws StepNotFoundException
+     * @throws EventDispatcherException
+     * @throws SteppedFormErrorsException
+     */
+    private function handleStep(Step $step, mixed $data): array
+    {
+        $entity = $this->getHandleStepEntity($step->getKey());
+
+        /** @var BeforeHandleStep $event */
+        $event = $this->dispatcher->dispatch(new BeforeHandleStep($data, $entity, $step));
+
+        $entity = $step->getStep()->handle($entity, $event->getData());
+
+        $this->rebuild($entity);
+
+        return [$entity, $event];
+    }
+
+    /**
      * @throws StepNotFoundException
      * @throws SteppedFormErrorsException
      * @throws EntityNotFoundException
      * @throws FormIsNotStartedException
+     * @throws StepIsNotSubmittedException
      */
     private function prepareRenderStep(Step $step, mixed $data = null): ?Step
     {

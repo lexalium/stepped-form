@@ -96,6 +96,24 @@ class FormStateTest extends TestCase
         $this->formState->getStepEntity('key');
     }
 
+    public function testGetCurrentStep(): void
+    {
+        $this->stepControl->expects($this->once())
+            ->method('getCurrent')
+            ->willReturn('key');
+
+        $this->assertEquals('key', $this->formState->getCurrentStep());
+    }
+
+    public function testGetCurrentStepNotFound(): void
+    {
+        $this->stepControl->expects($this->once())
+            ->method('getCurrent')
+            ->willThrowException(new CurrentStepNotFoundException());
+
+        $this->assertEquals(null, $this->formState->getCurrentStep());
+    }
+
     public function testInitializeWithEmptyState(): void
     {
         $this->formData->expects($this->once())

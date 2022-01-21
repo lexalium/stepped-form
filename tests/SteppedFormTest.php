@@ -8,6 +8,7 @@ use Lexal\SteppedForm\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Entity\TemplateDefinition;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
+use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\State\FormStateInterface;
 use Lexal\SteppedForm\SteppedForm;
@@ -206,6 +207,39 @@ class SteppedFormTest extends TestCase
         $this->assertEquals($expected, $this->form->handle('key', $data));
     }
 
+    public function testHandleLastWithNotSubmittedSteps(): void
+    {
+        $data = ['step' => 'test'];
+        $entity = self::SIMPLE_ENTITY + $data;
+
+        $notSubmittedStep = new Step('key', new RenderStep(handleReturn: $entity), isSubmitted: false);
+
+        $this->expectExceptionObject(new StepIsNotSubmittedException($notSubmittedStep));
+
+        $collection = new StepsCollection([
+            $notSubmittedStep,
+            new Step('key3', new RenderStep(handleReturn: $entity), isSubmitted: true),
+        ]);
+
+        $this->builder->expects($this->exactly(2))
+            ->method('build')
+            ->withConsecutive([self::SIMPLE_ENTITY], [$entity])
+            ->willReturnOnConsecutiveCalls($collection, $collection);
+
+        $this->testHandleWithCount(
+            1,
+            'key3',
+            $entity,
+            $data,
+            [new Step('key3', new RenderStep(handleReturn: $entity), isSubmitted: true)],
+            [null],
+            ['key'],
+            false,
+        );
+
+        $this->form->handle('key3', $data);
+    }
+
     protected function setUp(): void
     {
         $this->formState = $this->createMock(FormStateInterface::class);
@@ -223,7 +257,7 @@ class SteppedFormTest extends TestCase
 
     /**
      * @param Step[] $stepsForHandle
-     * @param Step[] $nextSteps
+     * @param Step[]|null[] $nextSteps
      * @param string[] $keysForGetStepEntity
      */
     private function testHandleWithCount(

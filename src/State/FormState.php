@@ -63,6 +63,15 @@ class FormState implements FormStateInterface
         return $this->formData->get(self::KEY_INITIALIZE_ENTITY);
     }
 
+    public function getCurrentStep(): ?string
+    {
+        try {
+            return $this->stepControl->getCurrent();
+        } catch (CurrentStepNotFoundException) {
+            return null;
+        }
+    }
+
     public function initialize(mixed $entity, StepsCollection $steps): void
     {
         try {

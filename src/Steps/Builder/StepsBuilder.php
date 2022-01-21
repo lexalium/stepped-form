@@ -119,22 +119,8 @@ class StepsBuilder implements StepsBuilderInterface
         return new LazyStep(
             $key,
             $step,
-            $this->getIsCurrentCallback($key),
-            $this->getIsSubmittedCallback($key),
+            fn () => $this->formState->getCurrentStep() === $key,
+            fn () => $this->formState->hasStepEntity($key),
         );
-    }
-
-    private function getIsCurrentCallback(string $key): Closure
-    {
-        return function () use ($key) {
-            return $this->formState->getCurrentStep() === $key;
-        };
-    }
-
-    private function getIsSubmittedCallback(string $key): Closure
-    {
-        return function () use ($key) {
-            return $this->formState->hasStepEntity($key);
-        };
     }
 }

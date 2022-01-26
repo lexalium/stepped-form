@@ -6,6 +6,7 @@ namespace Lexal\SteppedForm;
 
 use Lexal\SteppedForm\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Entity\TemplateDefinition;
+use Lexal\SteppedForm\EntityCopy\EntityCopyInterface;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\Event\FormFinished;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
@@ -31,6 +32,7 @@ class SteppedForm implements SteppedFormInterface
         private FormStateInterface $formState,
         private FormBuilderInterface $builder,
         private EventDispatcherInterface $dispatcher,
+        private EntityCopyInterface $entityCopy,
     ) {
         $this->steps = new StepsCollection([]);
     }
@@ -210,6 +212,6 @@ class SteppedForm implements SteppedFormInterface
             $entity = $this->formState->getInitializeEntity();
         }
 
-        return $entity;
+        return $this->entityCopy->copy($entity);
     }
 }

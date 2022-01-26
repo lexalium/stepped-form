@@ -6,6 +6,7 @@ namespace Lexal\SteppedForm\Tests;
 
 use Lexal\SteppedForm\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Entity\TemplateDefinition;
+use Lexal\SteppedForm\EntityCopy\EntityCopyInterface;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
@@ -35,6 +36,7 @@ class SteppedFormTest extends TestCase
     private MockObject $formState;
     private MockObject $builder;
     private MockObject $dispatcher;
+    private MockObject $entityCopy;
 
     public function testStart(): void
     {
@@ -245,11 +247,13 @@ class SteppedFormTest extends TestCase
         $this->formState = $this->createMock(FormStateInterface::class);
         $this->builder = $this->createMock(FormBuilderInterface::class);
         $this->dispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->entityCopy = $this->createMock(EntityCopyInterface::class);
 
         $this->form = new SteppedForm(
             $this->formState,
             $this->builder,
             $this->dispatcher,
+            $this->entityCopy,
         );
 
         parent::setUp();
@@ -287,6 +291,11 @@ class SteppedFormTest extends TestCase
                 ->method('getInitializeEntity')
                 ->willReturn(self::SIMPLE_ENTITY);
         }
+
+        $this->entityCopy->expects($this->exactly($count))
+            ->method('copy')
+            ->with(self::SIMPLE_ENTITY)
+            ->willReturn(self::SIMPLE_ENTITY);
 
         $events = array_map(
             static fn (Step $step): BeforeHandleStep => new BeforeHandleStep($data, self::SIMPLE_ENTITY, $step),

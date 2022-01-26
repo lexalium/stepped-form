@@ -10,14 +10,20 @@ use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 class StaticFormBuilder implements FormBuilderInterface
 {
     /**
-     * @param StepsCollection<Step> $collection
+     * @var StepsCollection<Step>|null
      */
-    public function __construct(private StepsCollection $collection)
+    private ?StepsCollection $collection = null;
+
+    public function __construct(private FormBuilderInterface $builder)
     {
     }
 
     public function build(mixed $entity): StepsCollection
     {
+        if ($this->collection === null) {
+            $this->collection = $this->builder->build($entity);
+        }
+
         return $this->collection;
     }
 }

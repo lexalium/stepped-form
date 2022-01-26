@@ -89,12 +89,14 @@ $dispatcher = new EventDispatcher();
 ```php
 <?php
 
+use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
 use Lexal\SteppedForm\SteppedForm;
 
 $form = new SteppedForm(
     $formState,
     $builder,
     $dispatcher,
+    new SimpleEntityCopy(),
 );
 ```
 

@@ -29,13 +29,13 @@ jobs:
 
       - name: "Test with lowest dependencies"
         run: |
-          composer update --prefer-lowest --no-interaction --no-progress --no-suggest
-          vendor/bin/phpunit
+          composer update --prefer-lowest --no-interaction --no-progress
+          vendor/bin/phpunit tests/
 
       - name: "Test with highest dependencies"
         run: |
-          composer update --no-interaction --no-progress --no-suggest
-          vendor/bin/phpunit
+          composer update --no-interaction --no-progress
+          vendor/bin/phpunit tests/
 
   phpstan:
     name: "PHPStan static code analysis"

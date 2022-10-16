@@ -1,0 +1,64 @@
+name: "PHPUnit, PHPCS, PHPStan Tests"
+
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+
+jobs:
+  phpunit:
+    name: "PHPUnit tests"
+
+    runs-on: "ubuntu-latest"
+
+    strategy:
+      matrix:
+        php-version:
+          - "8.0"
+          - "8.1"
+
+    steps:
+      - uses: "./.github/actions/setup"
+        with:
+          php-version: "${{ matrix.php-version }}"
+
+      - name: "Test with lowest dependencies"
+        run: |
+          composer update --prefer-lowest --no-interaction --no-progress --no-suggest
+          vendor/bin/phpunit
+
+      - name: "Test with highest dependencies"
+        run: |
+          composer update --no-interaction --no-progress --no-suggest
+          vendor/bin/phpunit
+
+  phpstan:
+    name: "PHPStan static code analysis"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: "./.github/actions/setup"
+        with:
+          php-version: "8.1"
+
+      - run: |
+          composer install --no-interaction --no-progress --no-suggest
+          vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
+
+  phpcs:
+    name: "PHP Code Sniffer static code analysis"
+
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: "./.github/actions/setup"
+        with:
+          php-version: "8.1"
+
+      - run: |
+          composer install --no-interaction --no-progress --no-suggest
+          vendor/bin/phpcs -q --report=checkstyle src | cs2pr

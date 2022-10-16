@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: "actions/checkout@v2"
 
-      - uses: "./.github/actions/setup"
+      - uses: "./.github/actions"
         with:
           php-version: "${{ matrix.php-version }}"
 
@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: "actions/checkout@v2"
 
-      - uses: "./.github/actions/setup"
+      - uses: "./.github/actions"
         with:
           php-version: "8.1"
 
@@ -61,7 +61,7 @@ jobs:
     steps:
       - uses: "actions/checkout@v2"
 
-      - uses: "./.github/actions/setup"
+      - uses: "./.github/actions"
         with:
           php-version: "8.1"
 

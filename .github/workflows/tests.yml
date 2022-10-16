@@ -21,9 +21,11 @@ jobs:
           - "8.1"
 
     steps:
-      - uses: "actions/checkout@v2"
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
 
-      - uses: "./.github/actions"
+      - name: "Setup Job with PHP version ${{ matrix.php-version }}"
+        uses: "./.github/actions"
         with:
           php-version: "${{ matrix.php-version }}"
 
@@ -43,14 +45,17 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v2"
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
 
-      - uses: "./.github/actions"
+      - name: "Setup Job with PHP version 8.1"
+        uses: "./.github/actions"
         with:
           php-version: "8.1"
 
-      - run: |
-          composer install --no-interaction --no-progress --no-suggest
+      - name: "Static code analysis"
+        run: |
+          composer install --no-interaction --no-progress
           vendor/bin/phpstan analyse --error-format=checkstyle | cs2pr
 
   phpcs:
@@ -59,12 +64,15 @@ jobs:
     runs-on: "ubuntu-latest"
 
     steps:
-      - uses: "actions/checkout@v2"
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
 
-      - uses: "./.github/actions"
+      - name: "Setup Job with PHP version 8.1"
+        uses: "./.github/actions"
         with:
           php-version: "8.1"
 
-      - run: |
-          composer install --no-interaction --no-progress --no-suggest
+      - name: "Static code analysis"
+        run: |
+          composer install --no-interaction --no-progress
           vendor/bin/phpcs -q --report=checkstyle src | cs2pr

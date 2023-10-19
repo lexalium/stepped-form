@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Lexal\SteppedForm\Steps\Builder;
+namespace Lexal\SteppedForm\Step\Builder;
 
 use Lexal\SteppedForm\Exception\StepNotFoundException;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
-use Lexal\SteppedForm\Steps\StepInterface;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\StepInterface;
+use Lexal\SteppedForm\Step\Steps;
 
 interface StepsBuilderInterface
 {
@@ -33,9 +33,9 @@ interface StepsBuilderInterface
     /**
      * Merge two collections to the one.
      *
-     * @param StepsCollection<Step> $collection
+     * @param Steps<Step> $steps
      */
-    public function merge(StepsCollection $collection): self;
+    public function merge(Steps $steps): self;
 
     /**
      * Removes step from the collection.
@@ -45,7 +45,7 @@ interface StepsBuilderInterface
     /**
      * Builds a new steps collection.
      *
-     * @return StepsCollection<Step>
+     * @return Steps<Step>
      */
-    public function get(): StepsCollection;
+    public function get(): Steps;
 }

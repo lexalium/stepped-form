@@ -7,7 +7,7 @@ namespace Lexal\SteppedForm\EntityCopy;
 use function is_array;
 use function is_object;
 
-class SimpleEntityCopy implements EntityCopyInterface
+final class SimpleEntityCopy implements EntityCopyInterface
 {
     public function copy(mixed $entity): mixed
     {

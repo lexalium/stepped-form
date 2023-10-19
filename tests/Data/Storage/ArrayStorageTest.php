@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests\Data\Storage;
 
-use Lexal\SteppedForm\Data\Storage\ArrayStorage;
+use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use PHPUnit\Framework\TestCase;
 
 class ArrayStorageTest extends TestCase

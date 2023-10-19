@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests\State;
 
-use Lexal\SteppedForm\Data\FormDataStorageInterface;
-use Lexal\SteppedForm\Data\StepControlInterface;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\CurrentStepNotFoundException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
-use Lexal\SteppedForm\State\FormState;
-use Lexal\SteppedForm\State\FormStateInterface;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
-use Lexal\SteppedForm\Steps\StepInterface;
+use Lexal\SteppedForm\Form\State\FormState;
+use Lexal\SteppedForm\Form\State\FormStateInterface;
+use Lexal\SteppedForm\Form\Storage\DataStorageInterface;
+use Lexal\SteppedForm\Form\Storage\StepControlInterface;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\StepInterface;
+use Lexal\SteppedForm\Step\Steps;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -208,7 +208,7 @@ class FormStateTest extends TestCase
     protected function setUp(): void
     {
         $this->stepControl = $this->createMock(StepControlInterface::class);
-        $this->formData = $this->createMock(FormDataStorageInterface::class);
+        $this->formData = $this->createMock(DataStorageInterface::class);
 
         $this->formState = new FormState($this->formData, $this->stepControl);
 
@@ -228,9 +228,9 @@ class FormStateTest extends TestCase
         $this->formState->handle('key', 'value', $next);
     }
 
-    private function createCollection(): StepsCollection
+    private function createCollection(): Steps
     {
-        return new StepsCollection([
+        return new Steps([
             new Step('key', $this->createMock(StepInterface::class)),
         ]);
     }

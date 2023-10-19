@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests\Steps;
 
-use Lexal\SteppedForm\Steps\StepInterface;
+use Lexal\SteppedForm\Step\StepInterface;
 
 class SimpleStep implements StepInterface
 {

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests\Data;
 
-use Lexal\SteppedForm\Data\FormDataStorage;
-use Lexal\SteppedForm\Data\FormDataStorageInterface;
-use Lexal\SteppedForm\Data\Storage\StorageInterface;
 use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
+use Lexal\SteppedForm\Form\Storage\DataStorage;
+use Lexal\SteppedForm\Form\Storage\DataStorageInterface;
+use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class FormDataStorageTest extends TestCase
 {
     private MockObject $storage;
-    private FormDataStorageInterface $formData;
+    private DataStorageInterface $formData;
 
     public function testGetLastWithData(): void
     {
@@ -70,7 +70,7 @@ class FormDataStorageTest extends TestCase
     {
         $this->storage = $this->createMock(StorageInterface::class);
 
-        $this->formData = new FormDataStorage($this->storage);
+        $this->formData = new DataStorage($this->storage);
 
         parent::setUp();
     }

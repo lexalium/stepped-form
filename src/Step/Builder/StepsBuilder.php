@@ -2,40 +2,42 @@
 
 declare(strict_types=1);
 
-namespace Lexal\SteppedForm\Steps\Builder;
+namespace Lexal\SteppedForm\Step\Builder;
 
-use Closure;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
-use Lexal\SteppedForm\State\FormStateInterface;
-use Lexal\SteppedForm\Steps\Collection\LazyStep;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
-use Lexal\SteppedForm\Steps\StepInterface;
+use Lexal\SteppedForm\Form\DataControlInterface;
+use Lexal\SteppedForm\Form\StepControlInterface;
+use Lexal\SteppedForm\Step\LazyStep;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\StepInterface;
+use Lexal\SteppedForm\Step\StepKey;
+use Lexal\SteppedForm\Step\Steps;
 
-use function array_merge;
 use function array_keys;
+use function array_merge;
 use function array_replace;
 use function array_search;
 use function array_slice;
 use function iterator_to_array;
 
-class StepsBuilder implements StepsBuilderInterface
+final class StepsBuilder implements StepsBuilderInterface
 {
     private const DEFAULT_INDEX = 0;
-    private const SLICE_OFFSET = 0;
 
     /**
      * @var Step[]
      */
     private array $steps = [];
 
-    public function __construct(private FormStateInterface $formState)
-    {
+    public function __construct(
+        private readonly StepControlInterface $stepControl,
+        private readonly DataControlInterface $dataControl,
+    ) {
     }
 
     public function add(string $key, StepInterface $step): self
     {
-        $this->steps[$key] = $this->createStep($key, $step);
+        $this->steps[$key] = $this->createStep(new StepKey($key), $step);
 
         return $this;
     }
@@ -46,7 +48,7 @@ class StepsBuilder implements StepsBuilderInterface
     public function addAfter(string $after, string $key, StepInterface $step): self
     {
         if (!$this->has($after)) {
-            throw new StepNotFoundException($after);
+            throw new StepNotFoundException(new StepKey($after));
         }
 
         $index = $this->getIndex($after);
@@ -60,7 +62,7 @@ class StepsBuilder implements StepsBuilderInterface
     public function addBefore(string $before, string $key, StepInterface $step): self
     {
         if (!$this->has($before)) {
-            throw new StepNotFoundException($before);
+            throw new StepNotFoundException(new StepKey($before));
         }
 
         $index = $this->getIndex($before);
@@ -68,9 +70,9 @@ class StepsBuilder implements StepsBuilderInterface
         return $this->addToIndex($index, $key, $step);
     }
 
-    public function merge(StepsCollection $collection): self
+    public function merge(Steps $steps): self
     {
-        $this->steps = array_merge($this->steps, iterator_to_array($collection));
+        $this->steps = array_merge($this->steps, iterator_to_array($steps));
 
         return $this;
     }
@@ -82,13 +84,13 @@ class StepsBuilder implements StepsBuilderInterface
         return $this;
     }
 
-    public function get(): StepsCollection
+    public function get(): Steps
     {
-        $collection = new StepsCollection($this->steps);
+        $steps = new Steps($this->steps);
 
         $this->steps = [];
 
-        return $collection;
+        return $steps;
     }
 
     private function has(string $key): bool
@@ -106,21 +108,21 @@ class StepsBuilder implements StepsBuilderInterface
     private function addToIndex(int $index, string $key, StepInterface $step): self
     {
         $this->steps = array_replace(
-            array_slice($this->steps, self::SLICE_OFFSET, $index, true),
-            [$key => $this->createStep($key, $step)],
+            array_slice($this->steps, 0, $index, true),
+            [$key => $this->createStep(new StepKey($key), $step)],
             array_slice($this->steps, $index, null, true),
         );
 
         return $this;
     }
 
-    private function createStep(string $key, StepInterface $step): Step
+    private function createStep(StepKey $key, StepInterface $step): Step
     {
         return new LazyStep(
             $key,
             $step,
-            fn (): bool => $this->formState->getCurrentStep() === $key,
-            fn (): bool => $this->formState->hasStepEntity($key),
+            fn (): bool => $this->stepControl->getCurrent() === $key->value,
+            fn (): bool => $this->dataControl->hasStepEntity($key),
         );
     }
 }

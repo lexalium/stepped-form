@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm;
 
-use Lexal\SteppedForm\Entity\TemplateDefinition;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
@@ -13,8 +12,9 @@ use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\StepKey;
+use Lexal\SteppedForm\Step\TemplateDefinition;
 
 interface SteppedFormInterface
 {
@@ -24,13 +24,6 @@ interface SteppedFormInterface
      * @throws FormIsNotStartedException
      */
     public function getEntity(): mixed;
-
-    /**
-     * Returns a form steps.
-     *
-     * @return StepsCollection<Step>
-     */
-    public function getSteps(): StepsCollection;
 
     /**
      * Starts a new form session and return a first Step.
@@ -49,8 +42,9 @@ interface SteppedFormInterface
      * @throws StepNotRenderableException
      * @throws EntityNotFoundException
      * @throws FormIsNotStartedException
+     * @throws StepIsNotSubmittedException
      */
-    public function render(string $key): TemplateDefinition;
+    public function render(StepKey $key): TemplateDefinition;
 
     /**
      * Handles a form step and returns next step or null when there is no next step.
@@ -61,7 +55,7 @@ interface SteppedFormInterface
      * @throws FormIsNotStartedException
      * @throws StepIsNotSubmittedException
      */
-    public function handle(string $key, mixed $data): ?Step;
+    public function handle(StepKey $key, mixed $data): ?Step;
 
     /**
      * Cancels current form session.

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Exception;
 
-class KeysNotFoundInStorageException extends SteppedFormException
+final class KeysNotFoundInStorageException extends SteppedFormException
 {
     public function __construct()
     {

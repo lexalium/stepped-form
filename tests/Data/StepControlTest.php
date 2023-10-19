@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests\Data;
 
-use Lexal\SteppedForm\Data\StepControl;
-use Lexal\SteppedForm\Data\StepControlInterface;
-use Lexal\SteppedForm\Data\Storage\StorageInterface;
 use Lexal\SteppedForm\Exception\CurrentStepNotFoundException;
+use Lexal\SteppedForm\Form\Storage\StepControl;
+use Lexal\SteppedForm\Form\Storage\StepControlInterface;
+use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

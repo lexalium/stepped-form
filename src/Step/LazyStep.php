@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-namespace Lexal\SteppedForm\Steps\Collection;
+namespace Lexal\SteppedForm\Step;
 
 use Closure;
-use Lexal\SteppedForm\Steps\StepInterface;
 
-class LazyStep extends Step
+final class LazyStep extends Step
 {
     public function __construct(
-        string $key,
+        StepKey $key,
         StepInterface $step,
-        private Closure $isCurrentCallback,
-        private Closure $isSubmittedCallback,
+        private readonly Closure $isCurrentCallback,
+        private readonly Closure $isSubmittedCallback,
     ) {
         parent::__construct($key, $step);
     }

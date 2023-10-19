@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Tests\Steps\Builder;
 
 use Lexal\SteppedForm\Exception\StepNotFoundException;
-use Lexal\SteppedForm\State\FormStateInterface;
-use Lexal\SteppedForm\Steps\Builder\StepsBuilder;
-use Lexal\SteppedForm\Steps\Builder\StepsBuilderInterface;
-use Lexal\SteppedForm\Steps\Collection\LazyStep;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
-use Lexal\SteppedForm\Steps\StepInterface;
+use Lexal\SteppedForm\Form\State\FormStateInterface;
+use Lexal\SteppedForm\Step\Builder\StepsBuilder;
+use Lexal\SteppedForm\Step\Builder\StepsBuilderInterface;
+use Lexal\SteppedForm\Step\LazyStep;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\StepInterface;
+use Lexal\SteppedForm\Step\Steps;
 use Lexal\SteppedForm\Tests\Steps\RenderStep;
 use Lexal\SteppedForm\Tests\Steps\SimpleStep;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -27,7 +27,7 @@ class StepsBuilderTest extends TestCase
         $this->builder->add('key', new SimpleStep());
         $this->builder->add('key2', new RenderStep());
 
-        $expected = new StepsCollection([
+        $expected = new Steps([
             $this->createStep('key', new SimpleStep()),
             $this->createStep('key2', new RenderStep()),
         ]);
@@ -42,7 +42,7 @@ class StepsBuilderTest extends TestCase
 
         $this->builder->addAfter('key', 'key4', new RenderStep());
 
-        $expected = new StepsCollection([
+        $expected = new Steps([
             $this->createStep('key', new SimpleStep()),
             $this->createStep('key4', new RenderStep()),
             $this->createStep('key2', new RenderStep()),
@@ -66,7 +66,7 @@ class StepsBuilderTest extends TestCase
 
         $this->builder->addBefore('key2', 'key4', new RenderStep());
 
-        $expected = new StepsCollection([
+        $expected = new Steps([
             $this->createStep('key', new SimpleStep()),
             $this->createStep('key4', new RenderStep()),
             $this->createStep('key2', new RenderStep()),
@@ -89,13 +89,13 @@ class StepsBuilderTest extends TestCase
         $this->builder->add('key2', new RenderStep());
 
         $this->builder->merge(
-            new StepsCollection([
+            new Steps([
                 new Step('key', new SimpleStep()),
                 new Step('key4', new RenderStep()),
             ]),
         );
 
-        $expected = new StepsCollection([
+        $expected = new Steps([
             new Step('key', new SimpleStep()),
             $this->createStep('key2', new RenderStep()),
             new Step('key4', new RenderStep()),
@@ -111,7 +111,7 @@ class StepsBuilderTest extends TestCase
 
         $this->builder->remove('key2');
 
-        $expected = new StepsCollection([
+        $expected = new Steps([
             $this->createStep('key', new SimpleStep()),
         ]);
 

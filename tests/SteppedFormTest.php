@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests;
 
-use Lexal\SteppedForm\Builder\FormBuilderInterface;
-use Lexal\SteppedForm\Entity\TemplateDefinition;
 use Lexal\SteppedForm\EntityCopy\EntityCopyInterface;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
-use Lexal\SteppedForm\State\FormStateInterface;
-use Lexal\SteppedForm\SteppedForm;
+use Lexal\SteppedForm\Form\Builder\FormBuilderInterface;
+use Lexal\SteppedForm\Form\State\FormStateInterface;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\Steps;
+use Lexal\SteppedForm\Step\TemplateDefinition;
+use Lexal\SteppedForm\SteppedFormBack;
 use Lexal\SteppedForm\SteppedFormInterface;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
 use Lexal\SteppedForm\Tests\Steps\RenderStep;
 use Lexal\SteppedForm\Tests\Steps\SimpleStep;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-
 use function array_fill;
 use function array_filter;
 use function array_map;
@@ -41,7 +40,7 @@ class SteppedFormTest extends TestCase
     public function testStart(): void
     {
         $expected = new Step('key', new RenderStep());
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new RenderStep()),
             new Step('key2', new RenderStep()),
         ]);
@@ -63,7 +62,7 @@ class SteppedFormTest extends TestCase
     public function testStartFirstStepIsNotRenderable(): void
     {
         $expected = new Step('key2', new RenderStep());
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep(self::SIMPLE_ENTITY)),
             new Step('key3', new SimpleStep(self::SIMPLE_ENTITY)),
             new Step('key2', new RenderStep()),
@@ -96,7 +95,7 @@ class SteppedFormTest extends TestCase
 
     public function testRender(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new RenderStep()),
             new Step('key2', new RenderStep()),
         ]);
@@ -128,7 +127,7 @@ class SteppedFormTest extends TestCase
 
     public function testRenderEntityFromPreviousStep(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new RenderStep()),
             new Step('key2', new RenderStep()),
         ]);
@@ -162,7 +161,7 @@ class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(new StepNotRenderableException('key'));
 
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
         ]);
 
@@ -184,7 +183,7 @@ class SteppedFormTest extends TestCase
         $entity = self::SIMPLE_ENTITY + $data;
 
         $expected = new Step('key3', new RenderStep());
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new RenderStep(handleReturn: $entity)),
             new Step('key3', new RenderStep()),
             new Step('key2', new RenderStep()),
@@ -218,7 +217,7 @@ class SteppedFormTest extends TestCase
 
         $this->expectExceptionObject(new StepIsNotSubmittedException($notSubmittedStep));
 
-        $collection = new StepsCollection([
+        $collection = new Steps([
             $notSubmittedStep,
             new Step('key3', new RenderStep(handleReturn: $entity), isSubmitted: true),
         ]);
@@ -249,7 +248,7 @@ class SteppedFormTest extends TestCase
         $this->dispatcher = $this->createMock(EventDispatcherInterface::class);
         $this->entityCopy = $this->createMock(EntityCopyInterface::class);
 
-        $this->form = new SteppedForm(
+        $this->form = new SteppedFormBack(
             $this->formState,
             $this->builder,
             $this->dispatcher,
@@ -310,7 +309,7 @@ class SteppedFormTest extends TestCase
             ))
             ->willReturnOnConsecutiveCalls(...$events);
 
-        $keys = [$key] + array_map(static fn (Step $step): string => $step->getKey(), array_filter($stepsForHandle));
+        $keys = [$key] + array_map(static fn (Step $step): string => $step->key->value, array_filter($stepsForHandle));
 
         $this->formState->expects($this->exactly($count))
             ->method('handle')

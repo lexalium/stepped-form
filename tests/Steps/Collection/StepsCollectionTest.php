@@ -6,18 +6,17 @@ namespace Lexal\SteppedForm\Tests\Steps\Collection;
 
 use Lexal\SteppedForm\Exception\NoStepsAddedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
-use Lexal\SteppedForm\Steps\Collection\Step;
-use Lexal\SteppedForm\Steps\Collection\StepsCollection;
+use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\Steps;
 use Lexal\SteppedForm\Tests\Steps\RenderStep;
 use Lexal\SteppedForm\Tests\Steps\SimpleStep;
-use Lexal\SteppedForm\Tests\Steps\TitledStep;
 use PHPUnit\Framework\TestCase;
 
 class StepsCollectionTest extends TestCase
 {
     public function testFirst(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
             new Step('key2', new SimpleStep()),
         ]);
@@ -31,14 +30,14 @@ class StepsCollectionTest extends TestCase
     {
         $this->expectExceptionObject(new NoStepsAddedException());
 
-        $collection = new StepsCollection([]);
+        $collection = new Steps([]);
 
         $collection->first();
     }
 
     public function testNext(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
             new Step('key2', new SimpleStep()),
         ]);
@@ -50,7 +49,7 @@ class StepsCollectionTest extends TestCase
 
     public function testNextIsNotExists(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
         ]);
 
@@ -61,14 +60,14 @@ class StepsCollectionTest extends TestCase
     {
         $this->expectExceptionObject(new StepNotFoundException('key'));
 
-        $collection = new StepsCollection([]);
+        $collection = new Steps([]);
 
         $collection->next('key');
     }
 
     public function testPrevious(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
             new Step('key2', new SimpleStep()),
         ]);
@@ -80,7 +79,7 @@ class StepsCollectionTest extends TestCase
 
     public function testPreviousIsNotExists(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
         ]);
 
@@ -91,14 +90,14 @@ class StepsCollectionTest extends TestCase
     {
         $this->expectExceptionObject(new StepNotFoundException('key'));
 
-        $collection = new StepsCollection([]);
+        $collection = new Steps([]);
 
         $collection->previous('key');
     }
 
     public function testHas(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
         ]);
 
@@ -108,7 +107,7 @@ class StepsCollectionTest extends TestCase
 
     public function testGet(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
         ]);
 
@@ -121,35 +120,19 @@ class StepsCollectionTest extends TestCase
     {
         $this->expectExceptionObject(new StepNotFoundException('key'));
 
-        $collection = new StepsCollection([]);
+        $collection = new Steps([]);
 
         $collection->get('key');
     }
 
-    public function testGetTitled(): void
-    {
-        $collection = new StepsCollection([
-            new Step('key', new SimpleStep()),
-            new Step('key2', new TitledStep()),
-            new Step('key3', new SimpleStep()),
-        ]);
-
-        $expected = new StepsCollection([
-            new Step('key2', new TitledStep()),
-        ]);
-
-        $this->assertEquals($expected, $collection->getTitled());
-    }
-
     public function testCount(): void
     {
-        $collection = new StepsCollection([
+        $collection = new Steps([
             new Step('key', new SimpleStep()),
-            new Step('key2', new TitledStep()),
             new Step('key3', new SimpleStep()),
             new Step('key', new RenderStep()),
         ]);
 
-        $this->assertCount(3, $collection);
+        $this->assertCount(2, $collection);
     }
 }

@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\EventDispatcher\Event;
 
-class FormFinished
+final class FormFinished
 {
-    public function __construct(private mixed $entity)
+    public function __construct(public readonly mixed $entity)
     {
-    }
-
-    public function getEntity(): mixed
-    {
-        return $this->entity;
     }
 }

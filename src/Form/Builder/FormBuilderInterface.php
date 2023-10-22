@@ -10,7 +10,12 @@ use Lexal\SteppedForm\Step\Steps;
 interface FormBuilderInterface
 {
     /**
-     * Build a StepsCollection by the form entity.
+     * Returns true if steps can be added depending on entity, else - false.
+     */
+    public function isDynamic(): bool;
+
+    /**
+     * Builds a Steps collection by the form entity.
      *
      * @return Steps<Step>
      */

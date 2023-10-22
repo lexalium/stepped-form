@@ -59,14 +59,17 @@ final class SteppedForm implements SteppedFormInterface
      */
     public function start(mixed $entity): ?Step
     {
-        $this->stepControl->throwIfAlreadyStarted(); // TODO: set first step as current or check by data control
-
-        $this->storage->clear();
-        $this->dataControl->start($entity);
+        $this->stepControl->throwIfAlreadyStarted();
 
         $this->build($entity);
 
-        return $this->prepareRenderStep($this->steps->first());
+        $first = $this->steps->first();
+
+        $this->storage->clear();
+        $this->dataControl->start($entity);
+        $this->stepControl->setCurrent($first->key);
+
+        return $this->prepareRenderStep($first);
     }
 
     public function render(StepKey $key): TemplateDefinition
@@ -99,9 +102,9 @@ final class SteppedForm implements SteppedFormInterface
         try {
             $data = $this->handleStep($step, $data);
 
-            return $this->prepareRenderStep($this->steps->next($step), $data);
+            return $this->prepareRenderStep($this->steps->next($step->key), $data);
         } catch (SteppedFormErrorsException $exception) {
-            $exception->setPreviousStep($this->steps->previousRenderable($step));
+            $exception->renderable = $this->steps->currentOrPreviousRenderable($step)?->key;
 
             throw $exception;
         }
@@ -130,28 +133,10 @@ final class SteppedForm implements SteppedFormInterface
 
         $entity = $step->step->handle($entity, $event->getData());
 
-        $this->dataControl->handle($step, $entity);
+        $this->dataControl->handle($step, $entity, $this->builder->isDynamic());
         $this->rebuild($entity);
 
         return $event->getData();
-    }
-
-    /**
-     * @throws StepIsNotSubmittedException
-     * @throws EventDispatcherException
-     * @throws StepNotFoundException
-     */
-    private function finish(): void
-    {
-        foreach ($this->steps as $step) {
-            if (!$step->isSubmitted()) {
-                throw StepIsNotSubmittedException::finish($step->key, $this->steps->previousRenderable($step));
-            }
-        }
-
-        $this->dispatcher->dispatch(new FormFinished($this->dataControl->getEntity()));
-
-        $this->storage->clear();
     }
 
     private function build(mixed $entity): void
@@ -164,8 +149,10 @@ final class SteppedForm implements SteppedFormInterface
 
     private function rebuild(mixed $entity): void
     {
-        $this->built = false;
-        $this->build($entity);
+        if ($this->builder->isDynamic()) {
+            $this->built = false;
+            $this->build($entity);
+        }
     }
 
     /**
@@ -187,13 +174,34 @@ final class SteppedForm implements SteppedFormInterface
     }
 
     /**
+     * @throws StepIsNotSubmittedException
+     * @throws EventDispatcherException
+     * @throws StepNotFoundException
+     */
+    private function finish(): void
+    {
+        foreach ($this->steps as $step) {
+            if (!$step->isSubmitted()) {
+                throw StepIsNotSubmittedException::finish(
+                    $step->key,
+                    $this->steps->currentOrPreviousRenderable($step)?->key,
+                );
+            }
+        }
+
+        $this->dispatcher->dispatch(new FormFinished($this->dataControl->getEntity()));
+
+        $this->storage->clear();
+    }
+
+    /**
      * @throws StepNotFoundException
      * @throws EntityNotFoundException
      */
     private function getCurrentOrPreviousStepEntity(Step $step): mixed
     {
         if (!$this->dataControl->hasStepEntity($step->key)) {
-            $previous = $this->steps->previous($step);
+            $previous = $this->steps->previous($step->key);
 
             if ($previous === null) {
                 return $this->dataControl->getInitializeEntity();
@@ -211,7 +219,7 @@ final class SteppedForm implements SteppedFormInterface
      */
     private function getHandleStepEntity(Step $step): mixed
     {
-        $previous = $this->steps->previous($step);
+        $previous = $this->steps->previous($step->key);
 
         if ($previous === null) {
             $entity = $this->dataControl->getInitializeEntity();
@@ -228,10 +236,13 @@ final class SteppedForm implements SteppedFormInterface
      */
     private function throwIfPreviousNotSubmitted(Step $step): void
     {
-        $previous = $this->steps->previous($step);
+        $previous = $this->steps->previous($step->key);
 
         if ($previous !== null && !$previous->isSubmitted()) {
-            throw StepIsNotSubmittedException::render($step->key, $this->steps->previousRenderable($step));
+            throw StepIsNotSubmittedException::render(
+                $previous->key,
+                $this->steps->currentOrPreviousRenderable($previous)?->key,
+            );
         }
     }
 }

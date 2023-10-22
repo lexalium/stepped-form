@@ -57,7 +57,7 @@ final class DataStorage implements DataStorageInterface
         $index = array_search($key->value, $keys, true);
 
         if ($index !== false) {
-            $this->forget(...array_slice($keys, (int)$index));
+            $this->forget(...array_slice($keys, (int)$index + 1));
         }
     }
 

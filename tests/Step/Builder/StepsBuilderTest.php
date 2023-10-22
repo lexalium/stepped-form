@@ -2,25 +2,37 @@
 
 declare(strict_types=1);
 
-namespace Lexal\SteppedForm\Tests\Steps\Builder;
+namespace Lexal\SteppedForm\Tests\Step\Builder;
 
+use Lexal\SteppedForm\Exception\NoStepsAddedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
-use Lexal\SteppedForm\Form\State\FormStateInterface;
+use Lexal\SteppedForm\Form\DataControlInterface;
+use Lexal\SteppedForm\Form\StepControlInterface;
 use Lexal\SteppedForm\Step\Builder\StepsBuilder;
 use Lexal\SteppedForm\Step\Builder\StepsBuilderInterface;
 use Lexal\SteppedForm\Step\LazyStep;
 use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepInterface;
+use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Step\Steps;
-use Lexal\SteppedForm\Tests\Steps\RenderStep;
-use Lexal\SteppedForm\Tests\Steps\SimpleStep;
-use PHPUnit\Framework\MockObject\MockObject;
+use Lexal\SteppedForm\Tests\Step\RenderStep;
+use Lexal\SteppedForm\Tests\Step\SimpleStep;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 
-class StepsBuilderTest extends TestCase
+final class StepsBuilderTest extends TestCase
 {
-    private MockObject $formState;
+    private StepControlInterface&Stub $stepControl;
+    private DataControlInterface&Stub $dataControl;
     private StepsBuilderInterface $builder;
+
+    protected function setUp(): void
+    {
+        $this->stepControl = $this->createStub(StepControlInterface::class);
+        $this->dataControl = $this->createStub(DataControlInterface::class);
+
+        $this->builder = new StepsBuilder($this->stepControl, $this->dataControl);
+    }
 
     public function testAdd(): void
     {
@@ -32,9 +44,12 @@ class StepsBuilderTest extends TestCase
             $this->createStep('key2', new RenderStep()),
         ]);
 
-        $this->assertEquals($expected, $this->builder->get());
+        self::assertEquals($expected, $this->builder->get());
     }
 
+    /**
+     * @throws StepNotFoundException
+     */
     public function testAddAfter(): void
     {
         $this->builder->add('key', new SimpleStep());
@@ -48,16 +63,22 @@ class StepsBuilderTest extends TestCase
             $this->createStep('key2', new RenderStep()),
         ]);
 
-        $this->assertEquals($expected, $this->builder->get());
+        self::assertEquals($expected, $this->builder->get());
     }
 
+    /**
+     * @throws StepNotFoundException
+     */
     public function testAddAfterNotFoundException(): void
     {
-        $this->expectExceptionObject(new StepNotFoundException('key'));
+        $this->expectExceptionObject(new StepNotFoundException(new StepKey('key')));
 
         $this->builder->addAfter('key', 'key4', new RenderStep());
     }
 
+    /**
+     * @throws StepNotFoundException
+     */
     public function testAddBefore(): void
     {
         $this->builder->add('key', new SimpleStep());
@@ -73,12 +94,15 @@ class StepsBuilderTest extends TestCase
             $this->createStep('key3', new RenderStep()),
         ]);
 
-        $this->assertEquals($expected, $this->builder->get());
+        self::assertEquals($expected, $this->builder->get());
     }
 
+    /**
+     * @throws StepNotFoundException
+     */
     public function testAddBeforeNotFoundException(): void
     {
-        $this->expectExceptionObject(new StepNotFoundException('key'));
+        $this->expectExceptionObject(new StepNotFoundException(new StepKey('key')));
 
         $this->builder->addBefore('key', 'key4', new RenderStep());
     }
@@ -90,18 +114,18 @@ class StepsBuilderTest extends TestCase
 
         $this->builder->merge(
             new Steps([
-                new Step('key', new SimpleStep()),
-                new Step('key4', new RenderStep()),
+                new Step(new StepKey('key'), new SimpleStep()),
+                new Step(new StepKey('key4'), new RenderStep()),
             ]),
         );
 
         $expected = new Steps([
-            new Step('key', new SimpleStep()),
+            new Step(new StepKey('key'), new SimpleStep()),
             $this->createStep('key2', new RenderStep()),
-            new Step('key4', new RenderStep()),
+            new Step(new StepKey('key4'), new RenderStep()),
         ]);
 
-        $this->assertEquals($expected, $this->builder->get());
+        self::assertEquals($expected, $this->builder->get());
     }
 
     public function testRemove(): void
@@ -115,58 +139,51 @@ class StepsBuilderTest extends TestCase
             $this->createStep('key', new SimpleStep()),
         ]);
 
-        $this->assertEquals($expected, $this->builder->get());
+        self::assertEquals($expected, $this->builder->get());
     }
 
+    /**
+     * @throws NoStepsAddedException
+     */
     public function testLazyCallbacksPositive(): void
     {
         $this->builder->add('key', new SimpleStep());
 
         $step = $this->builder->get()->first();
 
-        $this->formState->expects($this->once())
-            ->method('getCurrentStep')
+        $this->stepControl->method('getCurrent')
             ->willReturn('key');
 
-        $this->formState->expects($this->once())
-            ->method('hasStepEntity')
+        $this->dataControl->method('hasStepEntity')
             ->willReturn(true);
 
-        $this->assertTrue($step->isSubmitted());
-        $this->assertTrue($step->isCurrent());
+        self::assertTrue($step->isSubmitted());
+        self::assertTrue($step->isCurrent());
     }
 
+    /**
+     * @throws NoStepsAddedException
+     */
     public function testLazyCallbacksNegative(): void
     {
         $this->builder->add('key', new SimpleStep());
 
         $step = $this->builder->get()->first();
 
-        $this->formState->expects($this->once())
-            ->method('getCurrentStep')
+        $this->stepControl->method('getCurrent')
             ->willReturn('key2');
 
-        $this->formState->expects($this->once())
-            ->method('hasStepEntity')
+        $this->dataControl->method('hasStepEntity')
             ->willReturn(false);
 
-        $this->assertFalse($step->isSubmitted());
-        $this->assertFalse($step->isCurrent());
-    }
-
-    protected function setUp(): void
-    {
-        $this->formState = $this->createMock(FormStateInterface::class);
-
-        $this->builder = new StepsBuilder($this->formState);
-
-        parent::setUp();
+        self::assertFalse($step->isSubmitted());
+        self::assertFalse($step->isCurrent());
     }
 
     private function createStep(string $key, StepInterface $step): Step
     {
         return new LazyStep(
-            $key,
+            new StepKey($key),
             $step,
             fn (): bool => false,
             fn (): bool => false,

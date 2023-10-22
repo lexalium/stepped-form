@@ -40,5 +40,5 @@ interface DataControlInterface
     /**
      * Sets a step data and updates current step value.
      */
-    public function handle(Step $step, mixed $entity): void;
+    public function handle(Step $step, mixed $entity, bool $isDynamicForm): void;
 }

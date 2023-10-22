@@ -12,6 +12,7 @@ use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Traversable;
 
 use function array_search;
+use function array_unique;
 use function count;
 use function reset;
 
@@ -23,12 +24,12 @@ final class Steps implements Countable, IteratorAggregate
     /**
      * @var array<string, Step>
      */
-    private array $steps;
+    private array $steps = [];
 
     /**
      * @var string[]
      */
-    private array $keys;
+    private array $keys = [];
 
     /**
      * @param Step[] $steps
@@ -41,6 +42,8 @@ final class Steps implements Countable, IteratorAggregate
                 $this->keys[] = $step->key->value;
             }
         }
+
+        $this->keys = array_unique($this->keys);
     }
 
     public function has(StepKey $key): bool
@@ -77,9 +80,9 @@ final class Steps implements Countable, IteratorAggregate
     /**
      * @throws StepNotFoundException
      */
-    public function next(Step $step): ?Step
+    public function next(StepKey $key): ?Step
     {
-        $index = $this->getIndex($step);
+        $index = $this->getIndex($key);
 
         $index++;
 
@@ -95,9 +98,9 @@ final class Steps implements Countable, IteratorAggregate
     /**
      * @throws StepNotFoundException
      */
-    public function previous(Step $step): ?Step
+    public function previous(StepKey $key): ?Step
     {
-        $index = $this->getIndex($step);
+        $index = $this->getIndex($key);
 
         $index--;
 
@@ -113,15 +116,15 @@ final class Steps implements Countable, IteratorAggregate
     /**
      * @throws StepNotFoundException
      */
-    public function previousRenderable(Step $step): ?Step
+    public function currentOrPreviousRenderable(Step $step): ?Step
     {
-        $previous = $this->previous($step);
-
-        if ($previous === null) {
-            return null;
+        if ($step->step instanceof RenderStepInterface) {
+            return $step;
         }
 
-        return $previous->step instanceof RenderStepInterface ? $previous : $this->previousRenderable($previous);
+        $previous = $this->previous($step->key);
+
+        return $previous === null ? null : $this->currentOrPreviousRenderable($previous);
     }
 
     public function count(): int
@@ -140,12 +143,12 @@ final class Steps implements Countable, IteratorAggregate
     /**
      * @throws StepNotFoundException
      */
-    private function getIndex(Step $step): int
+    private function getIndex(StepKey $key): int
     {
-        $index = array_search($step->key->value, $this->keys, true);
+        $index = array_search($key->value, $this->keys, true);
 
         if ($index === false) {
-            throw new StepNotFoundException($step->key);
+            throw new StepNotFoundException($key);
         }
 
         return (int)$index;

@@ -8,7 +8,7 @@ use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class SimpleEntityCopyTest extends TestCase
+final class SimpleEntityCopyTest extends TestCase
 {
     public function testCopyScalar(): void
     {
@@ -16,7 +16,7 @@ class SimpleEntityCopyTest extends TestCase
 
         self::assertEquals(5, $entityCopy->copy(5));
         self::assertEquals('string', $entityCopy->copy('string'));
-        self::assertEquals(true, $entityCopy->copy(true));
+        self::assertTrue($entityCopy->copy(true));
         self::assertEquals(['key' => 'test', 'number' => 5], $entityCopy->copy(['key' => 'test', 'number' => 5]));
     }
 
@@ -31,13 +31,13 @@ class SimpleEntityCopyTest extends TestCase
         $actualCopy = $entityCopy->copy($object);
 
         self::assertNotSame($object, $actualCopy);
-        self::assertEquals(clone $object, $actualCopy);
+        self::assertEquals($object, $actualCopy);
 
         $array = ['state' => $object];
 
         $actualCopy = $entityCopy->copy($array);
 
         self::assertNotSame($array['state'], $actualCopy['state']);
-        self::assertEquals(clone $array['state'], $actualCopy['state']);
+        self::assertEquals($array['state'], $actualCopy['state']);
     }
 }

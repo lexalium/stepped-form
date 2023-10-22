@@ -16,6 +16,11 @@ final class StaticStepsFormBuilder implements FormBuilderInterface
     {
     }
 
+    public function isDynamic(): bool
+    {
+        return false;
+    }
+
     public function build(mixed $entity): Steps
     {
         return $this->steps;

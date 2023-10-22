@@ -8,6 +8,7 @@ use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use Lexal\SteppedForm\Form\Storage\DataStorageInterface;
 use Lexal\SteppedForm\Step\Step;
+use Lexal\SteppedForm\Step\StepBehaviourInterface;
 use Lexal\SteppedForm\Step\StepKey;
 
 final class DataControl implements DataControlInterface
@@ -53,9 +54,14 @@ final class DataControl implements DataControlInterface
         $this->formData->put(new StepKey(self::KEY_INITIALIZE_ENTITY), $entity);
     }
 
-    public function handle(Step $step, mixed $entity): void
+    public function handle(Step $step, mixed $entity, bool $isDynamicForm): void
     {
-        $this->formData->forgetAfter($step->key); // TODO: forget after only when steps is dynamic and step don't has interface
+        $isForgetAfter = $step->step instanceof StepBehaviourInterface && $step->step->forgetDataAfterCurrent($entity);
+
+        if ($isForgetAfter || ($isDynamicForm && !$step->step instanceof StepBehaviourInterface)) {
+            $this->formData->forgetAfter($step->key);
+        }
+
         $this->formData->put($step->key, $entity);
     }
 }

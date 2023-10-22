@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Lexal\SteppedForm\Tests\Steps;
+namespace Lexal\SteppedForm\Tests\Step;
 
 use Lexal\SteppedForm\Step\RenderStepInterface;
 use Lexal\SteppedForm\Step\Steps;
 use Lexal\SteppedForm\Step\TemplateDefinition;
 
-class RenderStep extends SimpleStep implements RenderStepInterface
+final class RenderStep extends SimpleStep implements RenderStepInterface
 {
-    public function __construct(private string $template = 'test', mixed $handleReturn = null)
+    public function __construct(private readonly string $template = 'test', mixed $handleReturn = null)
     {
         parent::__construct($handleReturn);
     }

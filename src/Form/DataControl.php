@@ -15,19 +15,19 @@ final class DataControl implements DataControlInterface
 {
     private const KEY_INITIALIZE_ENTITY = '__INITIALIZE__';
 
-    public function __construct(private readonly DataStorageInterface $formData)
+    public function __construct(private readonly DataStorageInterface $storage)
     {
     }
 
     public function getInitializeEntity(): mixed
     {
-        return $this->formData->get(new StepKey(self::KEY_INITIALIZE_ENTITY));
+        return $this->storage->get(new StepKey(self::KEY_INITIALIZE_ENTITY));
     }
 
     public function getEntity(): mixed
     {
         try {
-            $entity = $this->formData->getLast();
+            $entity = $this->storage->getLast();
         } catch (KeysNotFoundInStorageException) {
             $entity = $this->getInitializeEntity();
         }
@@ -37,7 +37,7 @@ final class DataControl implements DataControlInterface
 
     public function hasStepEntity(StepKey $key): bool
     {
-        return $this->formData->has($key);
+        return $this->storage->has($key);
     }
 
     public function getStepEntity(StepKey $key): mixed
@@ -46,12 +46,12 @@ final class DataControl implements DataControlInterface
             throw new EntityNotFoundException($key);
         }
 
-        return $this->formData->get($key);
+        return $this->storage->get($key);
     }
 
     public function start(mixed $entity): void
     {
-        $this->formData->put(new StepKey(self::KEY_INITIALIZE_ENTITY), $entity);
+        $this->storage->put(new StepKey(self::KEY_INITIALIZE_ENTITY), $entity);
     }
 
     public function handle(Step $step, mixed $entity, bool $isDynamicForm): void
@@ -59,9 +59,9 @@ final class DataControl implements DataControlInterface
         $isForgetAfter = $step->step instanceof StepBehaviourInterface && $step->step->forgetDataAfterCurrent($entity);
 
         if ($isForgetAfter || ($isDynamicForm && !$step->step instanceof StepBehaviourInterface)) {
-            $this->formData->forgetAfter($step->key);
+            $this->storage->forgetAfter($step->key);
         }
 
-        $this->formData->put($step->key, $entity);
+        $this->storage->put($step->key, $entity);
     }
 }

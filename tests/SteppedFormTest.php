@@ -10,6 +10,7 @@ use Lexal\SteppedForm\EventDispatcher\Event\FormFinished;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\StepHandleException;
 use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
@@ -100,8 +101,34 @@ final class SteppedFormTest extends TestCase
         $step4 = new Step(new StepKey('key4'), new SimpleStep(), isSubmitted: true);
 
         yield 'first step is renderable' => [new Steps([$step1, $step2]), $step1, ['id' => 5], 'key'];
-        yield 'first step is not renderable' => [new Steps([$step3, $step2]), $step2, ['id' => 5], 'key3'];
+        yield 'first step is not renderable' => [new Steps([$step3, $step2]), $step2, ['id' => 5], 'key2'];
         yield 'without renderable' => [new Steps([$step3, $step4]), null, null, null];
+    }
+
+    public function testCanAgainStartFormWhenFirstNotRenderableStepThrowsException(): void
+    {
+        $this->expectExceptionObject(new StepHandleException(['can not handle']));
+
+        $throwableStep = new class () implements StepInterface {
+            public function handle(mixed $entity, mixed $data): mixed
+            {
+                throw new StepHandleException(['can not handle']);
+            }
+        };
+
+        $this->builder->method('build')
+            ->willReturn(new Steps([new Step(new StepKey('key'), $throwableStep)]));
+
+        $this->dispatcher->method('dispatch')
+            ->willReturn(new BeforeHandleStep(null, ['id' => 5], new Step(new StepKey('key'), new RenderStep())));
+
+        try {
+            $this->form->start(['id' => 5]);
+        } catch (SteppedFormErrorsException) {
+            // skip first exception
+        }
+
+        $this->form->start(['id' => 5]);
     }
 
     public function testStartThrowIfAlreadyStarted(): void
@@ -126,7 +153,6 @@ final class SteppedFormTest extends TestCase
         $templateDefinition = $this->form->render($key);
 
         self::assertEquals(new TemplateDefinition('template', [$entity]), $templateDefinition);
-        self::assertEquals($key->value, $this->stepControl->getCurrent());
     }
 
     /**

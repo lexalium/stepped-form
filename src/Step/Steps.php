@@ -56,11 +56,7 @@ final class Steps implements Countable, IteratorAggregate
      */
     public function get(StepKey $key): Step
     {
-        if ($this->has($key)) {
-            return $this->steps[$key->value];
-        }
-
-        throw new StepNotFoundException($key);
+        return $this->steps[$key->value] ?? throw new StepNotFoundException($key);
     }
 
     /**

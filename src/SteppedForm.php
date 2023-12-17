@@ -250,7 +250,7 @@ final class SteppedForm implements SteppedFormInterface
         $previous = $this->steps->previous($step->key);
 
         if ($previous !== null && !$previous->isSubmitted()) {
-            throw StepIsNotSubmittedException::render(
+            throw StepIsNotSubmittedException::previous(
                 $previous->key,
                 $this->steps->currentOrPreviousRenderable($previous)?->key,
             );

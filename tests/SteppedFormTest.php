@@ -184,7 +184,7 @@ final class SteppedFormTest extends TestCase
 
     public function testRenderThrowIfPreviousNotSubmitted(): void
     {
-        $this->expectExceptionObject(StepIsNotSubmittedException::render(new StepKey('key2'), new StepKey('key')));
+        $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), new StepKey('key')));
 
         $this->stepControl->setCurrent(new StepKey('key'));
 
@@ -346,7 +346,7 @@ final class SteppedFormTest extends TestCase
 
     public function testHandleThrowIfPreviousNotSubmitted(): void
     {
-        $this->expectExceptionObject(StepIsNotSubmittedException::render(new StepKey('key2'), new StepKey('key')));
+        $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), new StepKey('key')));
 
         $this->stepControl->setCurrent(new StepKey('key3'));
 

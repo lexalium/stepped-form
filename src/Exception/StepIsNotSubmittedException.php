@@ -20,8 +20,8 @@ final class StepIsNotSubmittedException extends SteppedFormException
         return new self(sprintf('The Step [%s] is not submitted yet.', $key), $key, $renderable);
     }
 
-    public static function render(StepKey $key, ?StepKey $renderable): self
+    public static function previous(StepKey $key, ?StepKey $renderable): self
     {
-        return new self(sprintf('Cannot render step if previous step [%s] is not submitted.', $key), $key, $renderable);
+        return new self(sprintf('Previous step [%s] is not submitted.', $key), $key, $renderable);
     }
 }

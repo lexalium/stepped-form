@@ -75,7 +75,7 @@ final class SteppedFormTest extends TestCase
     }
 
     #[DataProvider('startDataProvider')]
-    public function testStart(Steps $steps, ?Step $expectedFirst, mixed $expectedEntity, ?string $expectedKey): void
+    public function testStart(Steps $steps, ?StepKey $expectedFirst, mixed $expectedEntity, ?string $expectedKey): void
     {
         $this->builder->method('build')
             ->willReturn($steps);
@@ -100,8 +100,8 @@ final class SteppedFormTest extends TestCase
         $step3 = new Step(new StepKey('key3'), new SimpleStep(), isSubmitted: true);
         $step4 = new Step(new StepKey('key4'), new SimpleStep(), isSubmitted: true);
 
-        yield 'first step is renderable' => [new Steps([$step1, $step2]), $step1, ['id' => 5], 'key'];
-        yield 'first step is not renderable' => [new Steps([$step3, $step2]), $step2, ['id' => 5], 'key2'];
+        yield 'first step is renderable' => [new Steps([$step1, $step2]), $step1->key, ['id' => 5], 'key'];
+        yield 'first step is not renderable' => [new Steps([$step3, $step2]), $step2->key, ['id' => 5], 'key2'];
         yield 'without renderable' => [new Steps([$step3, $step4]), null, null, null];
     }
 
@@ -239,7 +239,7 @@ final class SteppedFormTest extends TestCase
 
         $next = $this->form->handle(new StepKey('key2'), ['name' => 'handle']);
 
-        self::assertEquals($step3, $next);
+        self::assertEquals($step3->key, $next);
         self::assertEquals(
             ['id' => 5, 'name' => 'handle'],
             $this->dataControl->getStepEntity(new StepKey('key2')),

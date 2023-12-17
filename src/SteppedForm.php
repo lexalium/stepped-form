@@ -54,7 +54,7 @@ final class SteppedForm implements SteppedFormInterface
      * @throws EntityNotFoundException
      * @throws StepNotFoundException
      */
-    public function start(mixed $entity): ?Step
+    public function start(mixed $entity): ?StepKey
     {
         $this->stepControl->throwIfAlreadyStarted();
 
@@ -65,7 +65,7 @@ final class SteppedForm implements SteppedFormInterface
         $this->storage->clear();
         $this->dataControl->start($entity);
 
-        return $this->prepareRenderStep($first);
+        return $this->prepareRenderStepKey($first);
     }
 
     public function render(StepKey $key): TemplateDefinition
@@ -84,7 +84,7 @@ final class SteppedForm implements SteppedFormInterface
         return $step->step->getTemplateDefinition($this->getCurrentOrPreviousStepEntity($step), $this->steps);
     }
 
-    public function handle(StepKey $key, mixed $data): ?Step
+    public function handle(StepKey $key, mixed $data): ?StepKey
     {
         $this->stepControl->throwIfNotStarted();
 
@@ -109,7 +109,7 @@ final class SteppedForm implements SteppedFormInterface
      * @throws SteppedFormErrorsException
      * @throws StepIsNotSubmittedException
      */
-    private function handleStep(Step $step, mixed $data): ?Step
+    private function handleStep(Step $step, mixed $data): ?StepKey
     {
         $entity = $this->getHandleStepEntity($step);
 
@@ -122,7 +122,7 @@ final class SteppedForm implements SteppedFormInterface
             $this->dataControl->handle($step, $entity, $this->builder->isDynamic());
             $this->rebuild($entity);
 
-            return $this->prepareRenderStep($this->steps->next($step->key), $event->getData());
+            return $this->prepareRenderStepKey($this->steps->next($step->key), $event->getData());
         } catch (SteppedFormErrorsException $exception) {
             $exception->renderable = $this->steps->currentOrPreviousRenderable($step)?->key;
 
@@ -152,7 +152,7 @@ final class SteppedForm implements SteppedFormInterface
      * @throws StepNotFoundException
      * @throws SteppedFormErrorsException
      */
-    private function prepareRenderStep(?Step $step, mixed $data = null): ?Step
+    private function prepareRenderStepKey(?Step $step, mixed $data = null): ?StepKey
     {
         if ($step === null) {
             $this->finish();
@@ -163,7 +163,7 @@ final class SteppedForm implements SteppedFormInterface
         if ($step->step instanceof RenderStepInterface) {
             $this->stepControl->setCurrent($step->key);
 
-            return $step;
+            return $step->key;
         }
 
         return $this->handleStep($step, $data);

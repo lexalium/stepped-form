@@ -1,6 +1,6 @@
 # PHP Implementation of the Stepped Form
 
-[![PHPUnit, PHPCS, PHPStan Tests](https://github.com/alexxxxkkk/stepped-form/actions/workflows/tests.yml/badge.svg)](https://github.com/alexxxxkkk/stepped-form/actions/workflows/tests.yml)
+[![PHPUnit, PHPCS, PHPStan Tests](https://github.com/lexalium/stepped-form/actions/workflows/tests.yml/badge.svg)](https://github.com/lexalium/stepped-form/actions/workflows/tests.yml)
 
 With this package you can create a Stepped Form and render or handle
 its steps.

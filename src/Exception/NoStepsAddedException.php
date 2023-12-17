@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Exception;
 
-class NoStepsAddedException extends SteppedFormException
+final class NoStepsAddedException extends SteppedFormException
 {
     public function __construct()
     {

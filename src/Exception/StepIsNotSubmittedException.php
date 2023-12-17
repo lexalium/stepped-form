@@ -4,19 +4,24 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Exception;
 
-use Lexal\SteppedForm\Steps\Collection\Step;
+use Lexal\SteppedForm\Step\StepKey;
 
 use function sprintf;
 
-class StepIsNotSubmittedException extends SteppedFormException
+final class StepIsNotSubmittedException extends SteppedFormException
 {
-    public function __construct(private Step $step)
+    private function __construct(string $message, public readonly StepKey $key, public readonly ?StepKey $renderable)
     {
-        parent::__construct(sprintf('The Step [%s] is not submitted yet.', $this->step->getKey()));
+        parent::__construct($message);
     }
 
-    public function getStep(): Step
+    public static function finish(StepKey $key, ?StepKey $renderable): self
     {
-        return $this->step;
+        return new self(sprintf('The Step [%s] is not submitted yet.', $key), $key, $renderable);
+    }
+
+    public static function previous(StepKey $key, ?StepKey $renderable): self
+    {
+        return new self(sprintf('Previous step [%s] is not submitted.', $key), $key, $renderable);
     }
 }

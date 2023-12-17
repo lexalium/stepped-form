@@ -4,15 +4,12 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\EventDispatcher\Event;
 
-use Lexal\SteppedForm\Steps\Collection\Step;
+use Lexal\SteppedForm\Step\Step;
 
-class BeforeHandleStep
+final class BeforeHandleStep
 {
-    public function __construct(
-        private mixed $data,
-        private mixed $entity,
-        private Step $step,
-    ) {
+    public function __construct(private mixed $data, public readonly mixed $entity, public readonly Step $step)
+    {
     }
 
     public function getData(): mixed
@@ -23,15 +20,5 @@ class BeforeHandleStep
     public function setData(mixed $data): void
     {
         $this->data = $data;
-    }
-
-    public function getEntity(): mixed
-    {
-        return $this->entity;
-    }
-
-    public function getStep(): Step
-    {
-        return $this->step;
     }
 }

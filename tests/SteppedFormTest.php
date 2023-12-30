@@ -19,6 +19,7 @@ use Lexal\SteppedForm\Form\DataControl;
 use Lexal\SteppedForm\Form\StepControl;
 use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
+use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
 use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepInterface;
 use Lexal\SteppedForm\Step\StepKey;
@@ -41,10 +42,12 @@ final class SteppedFormTest extends TestCase
     private FormBuilderInterface&Stub $builder;
     private MockObject $dispatcher;
     private SteppedFormInterface $form;
+    private SessionStorageInterface $sessionStorage;
 
     protected function setUp(): void
     {
-        $storage = new ArrayStorage();
+        $this->sessionStorage = new InMemorySessionStorage();
+        $storage = new ArrayStorage($this->sessionStorage);
         $this->dataStorage = new DataStorage($storage);
         $this->dataControl = new DataControl($this->dataStorage);
         $this->stepControl = new StepControl($storage);
@@ -61,6 +64,7 @@ final class SteppedFormTest extends TestCase
             $this->builder,
             $this->dispatcher,
             new SimpleEntityCopy(),
+            $this->sessionStorage,
         );
     }
 
@@ -88,6 +92,7 @@ final class SteppedFormTest extends TestCase
         self::assertEquals($expectedFirst, $first);
         self::assertEquals($expectedEntity, $this->dataControl->getInitializeEntity());
         self::assertEquals($expectedKey, $this->stepControl->getCurrent());
+        self::assertEquals('__MAIN__', $this->sessionStorage->getCurrent());
     }
 
     /**
@@ -135,14 +140,36 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(new AlreadyStartedException('key'));
 
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
 
-        $this->form->start(['id' => 5]);
+        $this->form->start(['id' => 5], 'main');
+    }
+
+    public function testStartWithDifferentNamespaces(): void
+    {
+        $this->builder->method('build')
+            ->willReturn(new Steps([new Step(new StepKey('key'), new RenderStep(), isSubmitted: true)]));
+
+        $this->form->start(['id' => 5], 'first');
+
+        self::assertEquals(['id' => 5], $this->dataControl->getInitializeEntity());
+        self::assertEquals('first', $this->sessionStorage->getCurrent());
+
+        $this->form->start(['id' => 8], 'second');
+
+        self::assertEquals(['id' => 8], $this->dataControl->getInitializeEntity());
+        self::assertEquals('second', $this->sessionStorage->getCurrent());
+
+        $this->sessionStorage->setCurrent('first');
+
+        self::assertEquals(['id' => 5], $this->dataControl->getInitializeEntity());
     }
 
     #[DataProvider('renderDataProvider')]
     public function testRender(Steps $steps, StepKey $key, mixed $entity): void
     {
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 6]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 7]);
@@ -186,6 +213,7 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), new StepKey('key')));
 
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
 
         $this->builder->method('build')
@@ -204,6 +232,7 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(new StepNotRenderableException(new StepKey('key')));
 
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
 
         $this->builder->method('build')
@@ -214,6 +243,7 @@ final class SteppedFormTest extends TestCase
 
     public function testHandle(): void
     {
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
@@ -248,6 +278,7 @@ final class SteppedFormTest extends TestCase
 
     public function testHandleWithFinishForm(): void
     {
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
@@ -291,6 +322,7 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(StepIsNotSubmittedException::finish(new StepKey('key'), new StepKey('key')));
 
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key2'));
         $this->dataStorage->put(new StepKey('key2'), ['id' => 5]);
 
@@ -348,6 +380,7 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), new StepKey('key')));
 
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key3'));
 
         $this->builder->method('build')
@@ -367,6 +400,7 @@ final class SteppedFormTest extends TestCase
      */
     public function testCancel(): void
     {
+        $this->sessionStorage->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
 

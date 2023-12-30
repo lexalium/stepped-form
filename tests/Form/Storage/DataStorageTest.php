@@ -8,6 +8,7 @@ use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
 use Lexal\SteppedForm\Step\StepKey;
+use Lexal\SteppedForm\Tests\InMemorySessionStorage;
 use PHPUnit\Framework\TestCase;
 
 final class DataStorageTest extends TestCase
@@ -16,7 +17,7 @@ final class DataStorageTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataStorage = new DataStorage(new ArrayStorage());
+        $this->dataStorage = new DataStorage(new ArrayStorage(new InMemorySessionStorage()));
     }
 
     /**

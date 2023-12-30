@@ -12,6 +12,7 @@ use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepBehaviourInterface;
 use Lexal\SteppedForm\Step\StepInterface;
 use Lexal\SteppedForm\Step\StepKey;
+use Lexal\SteppedForm\Tests\InMemorySessionStorage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -22,7 +23,7 @@ final class DataControlTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataStorage = new DataStorage(new ArrayStorage());
+        $this->dataStorage = new DataStorage(new ArrayStorage(new InMemorySessionStorage()));
         $this->dataControl = new DataControl($this->dataStorage);
     }
 

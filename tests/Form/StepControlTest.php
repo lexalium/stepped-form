@@ -9,6 +9,7 @@ use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Form\StepControl;
 use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Step\StepKey;
+use Lexal\SteppedForm\Tests\InMemorySessionStorage;
 use PHPUnit\Framework\TestCase;
 
 final class StepControlTest extends TestCase
@@ -17,7 +18,7 @@ final class StepControlTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->stepControl = new StepControl(new ArrayStorage());
+        $this->stepControl = new StepControl(new ArrayStorage(new InMemorySessionStorage()));
     }
 
     public function testSetAndGetCurrent(): void

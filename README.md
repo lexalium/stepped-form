@@ -86,7 +86,30 @@ composer require lexal/stepped-form
     $dataControl = new DataControl(new DataStorage($storage));
     ```
 
-4. Create an Event Dispatcher.
+4. Create a Session storage to save current form session key and have ability to start one form with different user
+   initial entity. Use `NullSessionStorage` when there is no need to split form sessions or there is no dependency
+   on initial user input.
+   ```php
+   use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
+   
+   final class SessionStorage implements SessionStorageInterface
+   {
+       public function getCurrent(): ?string
+       {
+           // return current active session key (from redis, database, session or any other storage)
+           return 'main';
+       }
+   
+       public function setCurrent(string $namespace): void
+       {
+           // set current form session key
+       }
+   }
+   
+   $sessionStorage = new SessionStorage();
+   ```
+
+5. Create an Event Dispatcher.
     ```php
     use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
    
@@ -103,7 +126,7 @@ composer require lexal/stepped-form
     $dispatcher = new EventDispatcher();
     ```
 
-5. Create a Stepped Form.
+6. Create a Stepped Form.
     ```php
     use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
     use Lexal\SteppedForm\SteppedForm;
@@ -115,13 +138,17 @@ composer require lexal/stepped-form
         $builder,
         $dispatcher,
         new SimpleEntityCopy(),
+        $sessionStorage, // default value is `NullSessionStorage
     );
     ```
 
-6. Use Stepped Form in the application.
+7. Use Stepped Form in the application.
     ```php
     /* Starts a new form session */
-    $form->start(/* entity for initialize a form state */);
+    $form->start(
+        /* entity for initialize a form state */,
+        /* unique session key is you need to split different sessions of one form */,
+    );
 
     /* Returns a TemplateDefinition of rendered step */
     $form->render('key');

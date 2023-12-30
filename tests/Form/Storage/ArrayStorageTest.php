@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Tests\Form\Storage;
 
 use Lexal\SteppedForm\Form\Storage\ArrayStorage;
+use Lexal\SteppedForm\Tests\InMemorySessionStorage;
 use PHPUnit\Framework\TestCase;
 
 final class ArrayStorageTest extends TestCase
 {
     public function testPut(): void
     {
-        $storage = new ArrayStorage();
+        $storage = new ArrayStorage(new InMemorySessionStorage());
 
         $storage->put('key', 'value');
 
@@ -25,7 +26,7 @@ final class ArrayStorageTest extends TestCase
 
     public function testGet(): void
     {
-        $storage = new ArrayStorage();
+        $storage = new ArrayStorage(new InMemorySessionStorage());
 
         $storage->put('key', 'value');
 
@@ -36,7 +37,7 @@ final class ArrayStorageTest extends TestCase
 
     public function testHas(): void
     {
-        $storage = new ArrayStorage();
+        $storage = new ArrayStorage(new InMemorySessionStorage());
 
         $storage->put('key', 'value');
 
@@ -46,7 +47,7 @@ final class ArrayStorageTest extends TestCase
 
     public function testClear(): void
     {
-        $storage = new ArrayStorage();
+        $storage = new ArrayStorage(new InMemorySessionStorage());
 
         $storage->put('key', 'value');
         $storage->put('key2', 'value2');

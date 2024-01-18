@@ -6,13 +6,12 @@ namespace Lexal\SteppedForm\Tests\Form;
 
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Form\DataControl;
-use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
 use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepBehaviourInterface;
 use Lexal\SteppedForm\Step\StepInterface;
 use Lexal\SteppedForm\Step\StepKey;
-use Lexal\SteppedForm\Tests\InMemorySessionStorage;
+use Lexal\SteppedForm\Tests\InMemoryStorage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -23,7 +22,7 @@ final class DataControlTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataStorage = new DataStorage(new ArrayStorage(new InMemorySessionStorage()));
+        $this->dataStorage = new DataStorage(new InMemoryStorage());
         $this->dataControl = new DataControl($this->dataStorage);
     }
 
@@ -67,6 +66,7 @@ final class DataControlTest extends TestCase
     public function testGetStepEntityEntityNotFoundException(): void
     {
         $this->expectExceptionObject(new EntityNotFoundException(new StepKey('key')));
+        $this->expectExceptionMessage('There is no data for the given [key] step.');
 
         $this->dataControl->getStepEntity(new StepKey('key'));
     }

@@ -2,19 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Lexal\SteppedForm\Form\Storage;
+namespace Lexal\SteppedForm\Tests;
 
 use Lexal\SteppedForm\Exception\ReadSessionKeyException;
+use Lexal\SteppedForm\Form\SessionControl;
+use Lexal\SteppedForm\Form\SessionControlInterface;
+use Lexal\SteppedForm\Form\Storage\StorageInterface;
 
-final class ArrayStorage implements StorageInterface
+final class InMemoryStorage implements StorageInterface
 {
     /**
      * @var array<string, mixed>
      */
     private array $data = [];
 
-    public function __construct(private readonly SessionStorageInterface $sessionStorage)
-    {
+    public function __construct(
+        private readonly SessionControlInterface $sessionControl = new SessionControl(new InMemorySessionStorage()),
+    ) {
     }
 
     /**
@@ -24,7 +28,7 @@ final class ArrayStorage implements StorageInterface
      */
     public function has(string $key): bool
     {
-        return isset($this->data[$this->sessionStorage->getCurrent()][$key]);
+        return isset($this->data[$this->sessionControl->getCurrent()][$key]);
     }
 
     /**
@@ -34,7 +38,7 @@ final class ArrayStorage implements StorageInterface
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        return $this->data[$this->sessionStorage->getCurrent()][$key] ?? $default;
+        return $this->data[$this->sessionControl->getCurrent()][$key] ?? $default;
     }
 
     /**
@@ -44,7 +48,7 @@ final class ArrayStorage implements StorageInterface
      */
     public function put(string $key, mixed $data): void
     {
-        $this->data[$this->sessionStorage->getCurrent()][$key] = $data;
+        $this->data[$this->sessionControl->getCurrent()][$key] = $data;
     }
 
     /**
@@ -54,6 +58,6 @@ final class ArrayStorage implements StorageInterface
      */
     public function clear(): void
     {
-        unset($this->data[$this->sessionStorage->getCurrent()]);
+        unset($this->data[$this->sessionControl->getCurrent()]);
     }
 }

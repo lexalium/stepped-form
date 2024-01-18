@@ -53,14 +53,16 @@ final class StepsBuilderTest extends TestCase
     public function testAddAfter(): void
     {
         $this->builder->add('key', new SimpleStep());
-        $this->builder->add('key2', new RenderStep());
+        $this->builder->add('key2', new SimpleStep());
+        $this->builder->add('key3', new RenderStep());
 
-        $this->builder->addAfter('key', 'key4', new RenderStep());
+        $this->builder->addAfter('key2', 'key4', new RenderStep());
 
         $expected = new Steps([
             $this->createStep('key', new SimpleStep()),
+            $this->createStep('key2', new SimpleStep()),
             $this->createStep('key4', new RenderStep()),
-            $this->createStep('key2', new RenderStep()),
+            $this->createStep('key3', new RenderStep()),
         ]);
 
         self::assertEquals($expected, $this->builder->get());

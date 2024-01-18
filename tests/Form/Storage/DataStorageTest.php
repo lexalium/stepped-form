@@ -5,10 +5,9 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Tests\Form\Storage;
 
 use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
-use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
 use Lexal\SteppedForm\Step\StepKey;
-use Lexal\SteppedForm\Tests\InMemorySessionStorage;
+use Lexal\SteppedForm\Tests\InMemoryStorage;
 use PHPUnit\Framework\TestCase;
 
 final class DataStorageTest extends TestCase
@@ -17,7 +16,7 @@ final class DataStorageTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataStorage = new DataStorage(new ArrayStorage(new InMemorySessionStorage()));
+        $this->dataStorage = new DataStorage(new InMemoryStorage());
     }
 
     /**
@@ -41,6 +40,7 @@ final class DataStorageTest extends TestCase
     public function testGetLastKeysNotFoundException(): void
     {
         $this->expectExceptionObject(new KeysNotFoundInStorageException());
+        $this->expectExceptionMessage('There are no data saved in the storage.');
 
         $this->dataStorage->getLast();
     }

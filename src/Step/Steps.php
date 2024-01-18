@@ -100,7 +100,7 @@ final class Steps implements Countable, IteratorAggregate
 
         $index--;
 
-        if ($index < 0 || !isset($this->keys[$index])) {
+        if (!isset($this->keys[$index])) {
             return null;
         }
 
@@ -141,12 +141,13 @@ final class Steps implements Countable, IteratorAggregate
      */
     private function getIndex(StepKey $key): int
     {
+        /** @var int|false $index */
         $index = array_search($key->value, $this->keys, true);
 
         if ($index === false) {
             throw new StepNotFoundException($key);
         }
 
-        return (int)$index;
+        return $index;
     }
 }

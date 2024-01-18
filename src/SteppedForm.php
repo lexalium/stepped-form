@@ -16,9 +16,9 @@ use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
 use Lexal\SteppedForm\Form\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Form\DataControlInterface;
+use Lexal\SteppedForm\Form\SessionControl;
+use Lexal\SteppedForm\Form\SessionControlInterface;
 use Lexal\SteppedForm\Form\StepControlInterface;
-use Lexal\SteppedForm\Form\Storage\NullSessionStorage;
-use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
 use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use Lexal\SteppedForm\Step\RenderStepInterface;
 use Lexal\SteppedForm\Step\Step;
@@ -38,7 +38,7 @@ final class SteppedForm implements SteppedFormInterface
         private readonly FormBuilderInterface $builder,
         private readonly EventDispatcherInterface $dispatcher,
         private readonly EntityCopyInterface $entityCopy,
-        private readonly SessionStorageInterface $sessionStorage = new NullSessionStorage(),
+        private readonly SessionControlInterface $sessionControl = new SessionControl(),
     ) {
         $this->steps = new Steps();
     }
@@ -57,9 +57,9 @@ final class SteppedForm implements SteppedFormInterface
      * @throws EntityNotFoundException
      * @throws StepNotFoundException
      */
-    public function start(mixed $entity, string $sessionKey = self::DEFAULT_SESSION_KEY): ?StepKey
+    public function start(mixed $entity, string $sessionKey = SessionControlInterface::DEFAULT_SESSION_KEY): ?StepKey
     {
-        $this->sessionStorage->setCurrent($sessionKey);
+        $this->sessionControl->setCurrent($sessionKey);
 
         $this->stepControl->throwIfAlreadyStarted();
 

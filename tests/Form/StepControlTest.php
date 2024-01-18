@@ -7,9 +7,8 @@ namespace Lexal\SteppedForm\Tests\Form;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Form\StepControl;
-use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Step\StepKey;
-use Lexal\SteppedForm\Tests\InMemorySessionStorage;
+use Lexal\SteppedForm\Tests\InMemoryStorage;
 use PHPUnit\Framework\TestCase;
 
 final class StepControlTest extends TestCase
@@ -18,7 +17,7 @@ final class StepControlTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->stepControl = new StepControl(new ArrayStorage(new InMemorySessionStorage()));
+        $this->stepControl = new StepControl(new InMemoryStorage());
     }
 
     public function testSetAndGetCurrent(): void
@@ -30,42 +29,40 @@ final class StepControlTest extends TestCase
         self::assertEquals('key', $this->stepControl->getCurrent());
     }
 
-    /**
-     * @throws AlreadyStartedException
-     */
     public function testThrowIfAlreadyStarted(): void
     {
         $this->expectExceptionObject(new AlreadyStartedException('key'));
+        $this->expectExceptionMessage('The form has already started.');
 
         $this->stepControl->setCurrent(new StepKey('key'));
 
-        $this->stepControl->throwIfAlreadyStarted();
+        try {
+            $this->stepControl->throwIfAlreadyStarted();
+        } catch (AlreadyStartedException $exception) {
+            self::assertEquals('key', $exception->currentKey);
+
+            throw $exception;
+        }
     }
 
     /**
      * @doesNotPerformAssertions
-     *
-     * @throws AlreadyStartedException
      */
     public function testThrowIfAlreadyStartedWithoutException(): void
     {
         $this->stepControl->throwIfAlreadyStarted();
     }
 
-    /**
-     * @throws FormIsNotStartedException
-     */
     public function testThrowIfNotStarted(): void
     {
         $this->expectExceptionObject(new FormIsNotStartedException());
+        $this->expectExceptionMessage('The stepped form is not started yet.');
 
         $this->stepControl->throwIfNotStarted();
     }
 
     /**
      * @doesNotPerformAssertions
-     *
-     * @throws FormIsNotStartedException
      */
     public function testThrowIfNotStartedWithoutException(): void
     {

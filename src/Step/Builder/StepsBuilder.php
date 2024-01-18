@@ -22,8 +22,6 @@ use function iterator_to_array;
 
 final class StepsBuilder implements StepsBuilderInterface
 {
-    private const DEFAULT_INDEX = 0;
-
     /**
      * @var Step[]
      */
@@ -47,10 +45,6 @@ final class StepsBuilder implements StepsBuilderInterface
      */
     public function addAfter(string $after, string $key, StepInterface $step): self
     {
-        if (!$this->has($after)) {
-            throw new StepNotFoundException(new StepKey($after));
-        }
-
         $index = $this->getIndex($after);
 
         return $this->addToIndex($index + 1, $key, $step);
@@ -61,10 +55,6 @@ final class StepsBuilder implements StepsBuilderInterface
      */
     public function addBefore(string $before, string $key, StepInterface $step): self
     {
-        if (!$this->has($before)) {
-            throw new StepNotFoundException(new StepKey($before));
-        }
-
         $index = $this->getIndex($before);
 
         return $this->addToIndex($index, $key, $step);
@@ -93,16 +83,18 @@ final class StepsBuilder implements StepsBuilderInterface
         return $steps;
     }
 
-    private function has(string $key): bool
-    {
-        return isset($this->steps[$key]);
-    }
-
+    /**
+     * @throws StepNotFoundException
+     */
     private function getIndex(string $key): int
     {
         $index = array_search($key, array_keys($this->steps), true);
 
-        return $index === false ? self::DEFAULT_INDEX : $index;
+        if ($index === false) {
+            throw new StepNotFoundException(new StepKey($key));
+        }
+
+        return $index;
     }
 
     private function addToIndex(int $index, string $key, StepInterface $step): self
@@ -110,7 +102,7 @@ final class StepsBuilder implements StepsBuilderInterface
         $this->steps = array_replace(
             array_slice($this->steps, 0, $index, true),
             [$key => $this->createStep(new StepKey($key), $step)],
-            array_slice($this->steps, $index, null, true),
+            $this->steps,
         );
 
         return $this;

@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Form\Storage;
 
-use Lexal\SteppedForm\SteppedFormInterface;
-
 final class NullSessionStorage implements SessionStorageInterface
 {
-    public function getCurrent(): ?string
+    public function get(string $key): ?string
     {
-        return SteppedFormInterface::DEFAULT_SESSION_KEY;
+        return null;
     }
 
-    public function setCurrent(string $sessionKey): void
+    public function put(string $key, string $sessionKey): void
     {
         // nothing to save
     }

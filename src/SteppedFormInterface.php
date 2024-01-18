@@ -12,13 +12,12 @@ use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
+use Lexal\SteppedForm\Form\SessionControlInterface;
 use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Step\TemplateDefinition;
 
 interface SteppedFormInterface
 {
-    public const DEFAULT_SESSION_KEY = '__MAIN__';
-
     /**
      * Returns a form data.
      *
@@ -34,7 +33,7 @@ interface SteppedFormInterface
      * @throws AlreadyStartedException
      * @throws SteppedFormErrorsException
      */
-    public function start(mixed $entity, string $sessionKey = self::DEFAULT_SESSION_KEY): ?StepKey;
+    public function start(mixed $entity, string $sessionKey = SessionControlInterface::DEFAULT_SESSION_KEY): ?StepKey;
 
     /**
      * Returns a Template Definition for given step.

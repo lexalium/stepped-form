@@ -78,35 +78,35 @@ composer require lexal/stepped-form
     ```php
     use Lexal\SteppedForm\Form\DataControl;
     use Lexal\SteppedForm\Form\StepControl;
-    use Lexal\SteppedForm\Form\Storage\ArrayStorage;
     use Lexal\SteppedForm\Form\Storage\DataStorage;
 
-    $storage = new ArrayStorage(); // can use any other storage (session, database, redis, etc.)
+    $storage = new InMemoryStorage(); // can use any other storage (session, database, redis, etc.)
     $stepControl = new StepControl($storage);
     $dataControl = new DataControl(new DataStorage($storage));
     ```
 
-4. Create a Session storage to save current form session key and have ability to start one form with different user
-   initial entity. Use `NullSessionStorage` when there is no need to split form sessions or there is no dependency
-   on initial user input.
+4. Create a Session storage to save current form session key and have ability to split one form into different sessions
+   depending on initial user input (e.g. customer id). Use default `SessionControl` when there is no need to split
+   form sessions or there is no dependency on initial user input.
    ```php
+   use Lexal\SteppedForm\Form\SessionControl;
    use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
    
    final class SessionStorage implements SessionStorageInterface
    {
-       public function getCurrent(): ?string
+       public function get(): ?string
        {
            // return current active session key (from redis, database, session or any other storage)
            return 'main';
        }
-   
-       public function setCurrent(string $namespace): void
+
+       public function put(string $sessionKey): void
        {
-           // set current form session key
+           // save current form session key
        }
    }
-   
-   $sessionStorage = new SessionStorage();
+
+   $sessionControl = new SessionControl(new SessionStorage());
    ```
 
 5. Create an Event Dispatcher.
@@ -138,7 +138,7 @@ composer require lexal/stepped-form
         $builder,
         $dispatcher,
         new SimpleEntityCopy(),
-        $sessionStorage, // default value is `NullSessionStorage
+        $sessionControl, // default storage for session control is NullSessionStorage
     );
     ```
 
@@ -147,7 +147,7 @@ composer require lexal/stepped-form
     /* Starts a new form session */
     $form->start(
         /* entity for initialize a form state */,
-        /* unique session key is you need to split different sessions of one form */,
+        /* unique session key if you need to split different sessions of one form */,
     );
 
     /* Returns a TemplateDefinition of rendered step */
@@ -189,14 +189,14 @@ final class CustomerStep implements RenderStepInterface
         $entity->name = $data['name'];
         $entity->amount = (float)$data['amount'];
 
-        return $entity; // returns an entity that form will save as step data into the storage
+        return $entity; // return an entity that the form will save as step data into the storage
     }
 }
 ```
 
-The second type of step must implement `StepInterface`. Method `handle` can have
-business logic by calculating data and must return an updated form entity. Method
-will receive a `null` or a previous renderable step data as a second argument.
+The second type of step must implement `StepInterface`. Method `handle` can have business logic by calculating data
+and must return an updated form entity. Method will receive a `null` or previous renderable step submitted data as
+a second argument.
 
 ```php
 use Lexal\SteppedForm\Step\StepInterface;
@@ -219,11 +219,9 @@ final class TaxStep implements StepInterface
 
 ## Form Builder
 
-The Stepped Form uses a Form Builder for building a Steps collection by
-the form entity.
+The Stepped Form uses a Form Builder for building a Steps collection by the form entity.
 
-Stepped Form can have a fixed count of steps or different steps depending
-on previous user input data.
+Stepped Form can have a fixed count of steps or different steps depending on previous user input data.
 
 Example of Stepped Form with fixed list of steps:
 ```php
@@ -284,6 +282,32 @@ Dynamic stepped form will trigger clearing all steps data after current one when
 Steps data are not cleared from the storage for static forms or when current step implements
 `StepBehaviourInterface` and method `forgetDataAfterCurrent` returns `false`.
 
+Example of skipping data storage from clearing after currently submitted step (for dynamic forms):
+```php
+use Lexal\SteppedForm\Step\RenderStepInterface;
+use Lexal\SteppedForm\Step\StepBehaviourInterface;
+use Lexal\SteppedForm\Step\Steps;
+use Lexal\SteppedForm\Step\TemplateDefinition;
+
+final class CustomerStep implements StepBehaviourInterface
+{
+    public function getTemplateDefinition(mixed $entity, Steps $steps): TemplateDefinition
+    {
+        // render
+    }
+
+    public function handle(mixed $entity, mixed $data): mixed
+    {
+        // handle
+    }
+    
+    public function forgetDataAfterCurrent(mixed $entity): bool
+    {
+        return $entity->code === 'NA'; // remove form data after current only when code equals to 'NA'
+    }
+}
+```
+
 <div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
 
 ## Entity Copy
@@ -294,7 +318,7 @@ method and saving it to the storage.
 The package already has `SimpleEntityCopy` implementation of `EntityCopyInterface`. But you have to
 implement `__clone` method to clone internal objects if you use objects as a form entity.
 
-Alternative for the package `SimpleEntityCopy` is `DeepClone`.
+Alternative for the package `SimpleEntityCopy` is [`DeepClone`](https://github.com/myclabs/DeepCopy).
 
 <div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
 

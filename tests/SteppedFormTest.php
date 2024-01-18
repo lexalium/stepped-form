@@ -9,6 +9,7 @@ use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\Event\FormFinished;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
+use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Exception\StepHandleException;
 use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
@@ -16,10 +17,12 @@ use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
 use Lexal\SteppedForm\Form\Builder\FormBuilderInterface;
 use Lexal\SteppedForm\Form\DataControl;
+use Lexal\SteppedForm\Form\SessionControl;
+use Lexal\SteppedForm\Form\SessionControlInterface;
 use Lexal\SteppedForm\Form\StepControl;
-use Lexal\SteppedForm\Form\Storage\ArrayStorage;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
 use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
+use Lexal\SteppedForm\Form\Storage\StorageInterface;
 use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepInterface;
 use Lexal\SteppedForm\Step\StepKey;
@@ -36,21 +39,22 @@ use PHPUnit\Framework\TestCase;
 
 final class SteppedFormTest extends TestCase
 {
+    private StorageInterface $storage;
     private DataStorage $dataStorage;
     private DataControl $dataControl;
     private StepControl $stepControl;
     private FormBuilderInterface&Stub $builder;
     private MockObject $dispatcher;
     private SteppedFormInterface $form;
-    private SessionStorageInterface $sessionStorage;
+    private SessionControlInterface $sessionControl;
 
     protected function setUp(): void
     {
-        $this->sessionStorage = new InMemorySessionStorage();
-        $storage = new ArrayStorage($this->sessionStorage);
-        $this->dataStorage = new DataStorage($storage);
+        $this->sessionControl = new SessionControl(new InMemorySessionStorage());
+        $this->storage = new InMemoryStorage($this->sessionControl);
+        $this->dataStorage = new DataStorage($this->storage);
         $this->dataControl = new DataControl($this->dataStorage);
-        $this->stepControl = new StepControl($storage);
+        $this->stepControl = new StepControl($this->storage);
         $this->builder = $this->createStub(FormBuilderInterface::class);
         $this->dispatcher = $this->createMock(EventDispatcherInterface::class);
 
@@ -60,11 +64,11 @@ final class SteppedFormTest extends TestCase
         $this->form = new SteppedForm(
             $this->dataControl,
             $this->stepControl,
-            $storage,
+            $this->storage,
             $this->builder,
             $this->dispatcher,
             new SimpleEntityCopy(),
-            $this->sessionStorage,
+            $this->sessionControl,
         );
     }
 
@@ -81,6 +85,8 @@ final class SteppedFormTest extends TestCase
     #[DataProvider('startDataProvider')]
     public function testStart(Steps $steps, ?StepKey $expectedFirst, mixed $expectedEntity, ?string $expectedKey): void
     {
+        $this->dataStorage->put(new StepKey('key'), ['id' => 6]);
+
         $this->builder->method('build')
             ->willReturn($steps);
 
@@ -91,8 +97,10 @@ final class SteppedFormTest extends TestCase
 
         self::assertEquals($expectedFirst, $first);
         self::assertEquals($expectedEntity, $this->dataControl->getInitializeEntity());
+        self::assertEquals($expectedEntity, $this->dataControl->getEntity());
         self::assertEquals($expectedKey, $this->stepControl->getCurrent());
-        self::assertEquals('__MAIN__', $this->sessionStorage->getCurrent());
+        self::assertEquals('__MAIN__', $this->sessionControl->getCurrent());
+        self::assertNull($this->dataStorage->get(new StepKey('key')));
     }
 
     /**
@@ -140,7 +148,7 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(new AlreadyStartedException('key'));
 
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
 
         $this->form->start(['id' => 5], 'main');
@@ -154,14 +162,14 @@ final class SteppedFormTest extends TestCase
         $this->form->start(['id' => 5], 'first');
 
         self::assertEquals(['id' => 5], $this->dataControl->getInitializeEntity());
-        self::assertEquals('first', $this->sessionStorage->getCurrent());
+        self::assertEquals('first', $this->sessionControl->getCurrent());
 
         $this->form->start(['id' => 8], 'second');
 
         self::assertEquals(['id' => 8], $this->dataControl->getInitializeEntity());
-        self::assertEquals('second', $this->sessionStorage->getCurrent());
+        self::assertEquals('second', $this->sessionControl->getCurrent());
 
-        $this->sessionStorage->setCurrent('first');
+        $this->sessionControl->setCurrent('first');
 
         self::assertEquals(['id' => 5], $this->dataControl->getInitializeEntity());
     }
@@ -169,8 +177,9 @@ final class SteppedFormTest extends TestCase
     #[DataProvider('renderDataProvider')]
     public function testRender(Steps $steps, StepKey $key, mixed $entity): void
     {
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
+        $this->dataControl->start(['id' => 4]);
         $this->dataStorage->put(new StepKey('key'), ['id' => 6]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 7]);
 
@@ -200,6 +209,51 @@ final class SteppedFormTest extends TestCase
         ]);
 
         yield 'template with current step entity' => [$steps, new StepKey('key2'), ['id' => 7]];
+
+        $steps = new Steps([
+            new Step(new StepKey('key4'), new RenderStep('template')),
+            new Step(new StepKey('key2'), new RenderStep('template')),
+        ]);
+
+        yield 'template with initial step entity' => [$steps, new StepKey('key4'), ['id' => 4]];
+    }
+
+    #[DataProvider('renderPreviousStepEntityNotFoundDataProvider')]
+    public function testRenderPreviousStepEntityNotFound(StepInterface $step, ?StepKey $renderable): void
+    {
+        $exception = new EntityNotFoundException(new StepKey('key'));
+        $exception->renderable = $renderable;
+
+        $this->expectExceptionObject($exception);
+
+        $this->sessionControl->setCurrent('main');
+        $this->stepControl->setCurrent(new StepKey('key'));
+        $this->dataControl->start(['id' => 4]);
+
+        $steps = new Steps([
+            new Step(new StepKey('key'), $step, isSubmitted: true),
+            new Step(new StepKey('key2'), new RenderStep('template')),
+        ]);
+
+        $this->builder->method('build')
+            ->willReturn($steps);
+
+        try {
+            $this->form->render(new StepKey('key2'));
+        } catch (EntityNotFoundException $exception) {
+            self::assertEquals($renderable, $exception->renderable);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return iterable<string, array{0: StepInterface, 1: StepKey|null}>
+     */
+    public static function renderPreviousStepEntityNotFoundDataProvider(): iterable
+    {
+        yield 'previous step is renderable' => [new RenderStep(), new StepKey('key')];
+        yield 'previous step is not renderable' => [new SimpleStep(), null];
     }
 
     public function testRenderThrowIfNotStarted(): void
@@ -209,30 +263,48 @@ final class SteppedFormTest extends TestCase
         $this->form->render(new StepKey('key'));
     }
 
-    public function testRenderThrowIfPreviousNotSubmitted(): void
+    #[DataProvider('renderThrowIfPreviousNotSubmittedDataProvider')]
+    public function testRenderThrowIfPreviousNotSubmitted(StepInterface $step, ?StepKey $renderable): void
     {
-        $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), new StepKey('key')));
+        $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), $renderable));
+        $this->expectExceptionMessage('Previous step [key2] is not submitted.');
 
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
 
         $this->builder->method('build')
             ->willReturn(
                 new Steps([
-                    new Step(new StepKey('key'), new RenderStep(), isSubmitted: true),
+                    new Step(new StepKey('key'), $step, isSubmitted: true),
                     new Step(new StepKey('key2'), new SimpleStep(), isSubmitted: false),
                     new Step(new StepKey('key3'), new RenderStep()),
                 ]),
             );
 
-        $this->form->render(new StepKey('key3'));
+        try {
+            $this->form->render(new StepKey('key3'));
+        } catch (StepIsNotSubmittedException $exception) {
+            self::assertEquals($renderable, $exception->renderable);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return iterable<string, array{0: StepInterface, 1: ?StepKey}>
+     */
+    public static function renderThrowIfPreviousNotSubmittedDataProvider(): iterable
+    {
+        yield 'with previous renderable' => [new RenderStep(), new StepKey('key')];
+        yield 'without previous renderable' => [new SimpleStep(), null];
     }
 
     public function testRenderStepIsNotRenderableException(): void
     {
         $this->expectExceptionObject(new StepNotRenderableException(new StepKey('key')));
+        $this->expectExceptionMessage('The step [key] is not renderable.');
 
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
 
         $this->builder->method('build')
@@ -243,7 +315,7 @@ final class SteppedFormTest extends TestCase
 
     public function testHandle(): void
     {
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
@@ -269,16 +341,56 @@ final class SteppedFormTest extends TestCase
 
         $next = $this->form->handle(new StepKey('key2'), ['name' => 'handle']);
 
+        $expectedEntity = ['id' => 5, 'name' => 'handle'];
+
         self::assertEquals($step3->key, $next);
-        self::assertEquals(
-            ['id' => 5, 'name' => 'handle'],
-            $this->dataControl->getStepEntity(new StepKey('key2')),
+        self::assertEquals($expectedEntity, $this->dataControl->getStepEntity(new StepKey('key2')));
+        self::assertEquals($expectedEntity, $this->form->getEntity());
+    }
+
+    #[DataProvider('handleWithRebuildDataProvider')]
+    public function testHandleWithRebuild(mixed $handleReturn, string $expectedNextKey): void
+    {
+        $form = new SteppedForm(
+            $this->dataControl,
+            $this->stepControl,
+            $this->storage,
+            new DynamicFormBuilder($handleReturn),
+            $this->dispatcher, // @phpstan-ignore-line
+            new SimpleEntityCopy(),
+            $this->sessionControl,
         );
+
+        $this->sessionControl->setCurrent('main');
+        $this->stepControl->setCurrent(new StepKey('key'));
+        $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
+
+        $step = new Step(new StepKey('key1'), new RenderStep(handleReturn: $handleReturn));
+
+        $event = new BeforeHandleStep(['name' => 'handle'], ['id' => 5], $step);
+
+        $this->dispatcher->expects($this->once())
+            ->method('dispatch')
+            ->willReturn($event);
+
+        $next = $form->handle(new StepKey('key1'), $handleReturn);
+
+        self::assertEquals($expectedNextKey, $next?->value);
+    }
+
+    /**
+     * @return iterable<string, array{0: mixed, 1: string}>
+     */
+    public static function handleWithRebuildDataProvider(): iterable
+    {
+        yield 'without rebuild' => [['id' => 5], 'key3'];
+        yield 'with rebuild' => [['id' => 5, 'rebuild' => true], 'key2'];
     }
 
     public function testHandleWithFinishForm(): void
     {
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
@@ -318,16 +430,18 @@ final class SteppedFormTest extends TestCase
         self::assertNull($this->dataStorage->get(new StepKey('key2')));
     }
 
-    public function testHandleWithFinishWithNotSubmittedSteps(): void
+    #[DataProvider('handleWithFinishWithNotSubmittedStepsDataProvider')]
+    public function testHandleWithFinishWithNotSubmittedSteps(StepInterface $step, ?StepKey $renderable): void
     {
-        $this->expectExceptionObject(StepIsNotSubmittedException::finish(new StepKey('key'), new StepKey('key')));
+        $this->expectExceptionObject(StepIsNotSubmittedException::finish(new StepKey('key'), $renderable));
+        $this->expectExceptionMessage('The Step [key] is not submitted yet.');
 
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key2'));
         $this->dataStorage->put(new StepKey('key2'), ['id' => 5]);
 
         $steps = new Steps([
-            new Step(new StepKey('key'), new RenderStep(), isSubmitted: false),
+            new Step(new StepKey('key'), $step, isSubmitted: false),
             new Step(new StepKey('key2'), new RenderStep(), isSubmitted: true),
             new Step(new StepKey('key3'), new RenderStep()),
         ]);
@@ -338,7 +452,22 @@ final class SteppedFormTest extends TestCase
         $this->dispatcher->method('dispatch')
             ->willReturn(new BeforeHandleStep(null, ['id' => 5], new Step(new StepKey('key'), new RenderStep())));
 
-        $this->form->handle(new StepKey('key3'), ['name' => 'handle']);
+        try {
+            $this->form->handle(new StepKey('key3'), ['name' => 'handle']);
+        } catch (StepIsNotSubmittedException $exception) {
+            self::assertEquals($renderable, $exception->renderable);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @return iterable<string, array{0: StepInterface, 1: ?StepKey}>
+     */
+    public static function handleWithFinishWithNotSubmittedStepsDataProvider(): iterable
+    {
+        yield 'with previous renderable' => [new RenderStep(), new StepKey('key')];
+        yield 'without previous renderable' => [new SimpleStep(), null];
     }
 
     public function testHandleSteppedFormErrorsException(): void
@@ -380,7 +509,7 @@ final class SteppedFormTest extends TestCase
     {
         $this->expectExceptionObject(StepIsNotSubmittedException::previous(new StepKey('key2'), new StepKey('key')));
 
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key3'));
 
         $this->builder->method('build')
@@ -400,7 +529,7 @@ final class SteppedFormTest extends TestCase
      */
     public function testCancel(): void
     {
-        $this->sessionStorage->setCurrent('main');
+        $this->sessionControl->setCurrent('main');
         $this->stepControl->setCurrent(new StepKey('key'));
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
 

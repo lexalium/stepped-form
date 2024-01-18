@@ -10,12 +10,35 @@ use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Step\Steps;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class StepsTest extends TestCase
 {
-    /**
-     * @throws NoStepsAddedException
-     */
+    public function testCreateNoErrorsWithDifferentTypes(): void
+    {
+        /** @phpstan-ignore-next-line */
+        $steps = new Steps([
+            new Step(new StepKey('key'), new SimpleStep()),
+            new stdClass(),
+            5,
+            'string',
+            ['key' => 'key'],
+        ]);
+
+        self::assertEquals(1, $steps->count());
+    }
+
+    public function testCreateWithDuplicateKeys(): void
+    {
+        $steps = new Steps([
+            new Step(new StepKey('key'), new SimpleStep()),
+            new Step(new StepKey('key'), new SimpleStep()),
+        ]);
+
+        self::assertEquals(1, $steps->count());
+        self::assertNull($steps->next(new StepKey('key')));
+    }
+
     public function testFirst(): void
     {
         $steps = new Steps([
@@ -28,21 +51,16 @@ final class StepsTest extends TestCase
         self::assertEquals($expected, $steps->first());
     }
 
-    /**
-     * @throws NoStepsAddedException
-     */
     public function testFirstNoStepsAddedException(): void
     {
         $this->expectExceptionObject(new NoStepsAddedException());
+        $this->expectExceptionMessage('No steps have been added to the form.');
 
         $steps = new Steps([]);
 
         $steps->first();
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testNext(): void
     {
         $steps = new Steps([
@@ -55,9 +73,6 @@ final class StepsTest extends TestCase
         self::assertEquals($expected, $steps->next(new StepKey('key')));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testNextIsNotExists(): void
     {
         $steps = new Steps([
@@ -67,9 +82,6 @@ final class StepsTest extends TestCase
         $this->assertNull($steps->next(new StepKey('key')));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testNextStepNotFoundException(): void
     {
         $this->expectExceptionObject(new StepNotFoundException(new StepKey('key')));
@@ -79,9 +91,6 @@ final class StepsTest extends TestCase
         $steps->next(new StepKey('key'));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testPrevious(): void
     {
         $steps = new Steps([
@@ -94,9 +103,6 @@ final class StepsTest extends TestCase
         self::assertEquals($expected, $steps->previous(new StepKey('key2')));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testPreviousIsNotExists(): void
     {
         $steps = new Steps([
@@ -106,9 +112,6 @@ final class StepsTest extends TestCase
         $this->assertNull($steps->previous(new StepKey('key')));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testPreviousStepNotFoundException(): void
     {
         $this->expectExceptionObject(new StepNotFoundException(new StepKey('key')));
@@ -118,9 +121,6 @@ final class StepsTest extends TestCase
         $steps->previous(new StepKey('key'));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testCurrentOrPreviousRenderable(): void
     {
         $step1 = new Step(new StepKey('key'), new RenderStep());
@@ -146,9 +146,6 @@ final class StepsTest extends TestCase
         $this->assertFalse($steps->has(new StepKey('key2')));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testGet(): void
     {
         $steps = new Steps([
@@ -160,12 +157,10 @@ final class StepsTest extends TestCase
         self::assertEquals($expected, $steps->get(new StepKey('key')));
     }
 
-    /**
-     * @throws StepNotFoundException
-     */
     public function testGetStepNotFoundException(): void
     {
         $this->expectExceptionObject(new StepNotFoundException(new StepKey('key')));
+        $this->expectExceptionMessage('The step [key] is not found');
 
         $steps = new Steps([]);
 

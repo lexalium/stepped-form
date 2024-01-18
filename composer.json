@@ -19,6 +19,7 @@
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "infection/infection": "^0.27.9",
         "phpstan/phpstan": "^1.10",
         "phpunit/phpunit": "^10.4",
         "roave/security-advisories": "dev-latest",
@@ -37,7 +38,20 @@
     "config": {
         "sort-packages": true,
         "allow-plugins": {
-            "dealerdirect/phpcodesniffer-composer-installer": true
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "infection/extension-installer": true
         }
+    },
+    "scripts": {
+        "phpunit": "XDEBUG_MODE=coverage phpunit --coverage-text",
+        "phpstan": "phpstan",
+        "phpcs": "phpcs",
+        "infection": "infection -j4 --only-covered",
+        "tests": [
+            "@phpcs",
+            "phpstan",
+            "@phpunit",
+            "@infection"
+        ]
     }
 }

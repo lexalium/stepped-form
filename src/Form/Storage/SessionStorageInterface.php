@@ -9,15 +9,15 @@ use Lexal\SteppedForm\Exception\ReadSessionKeyException;
 interface SessionStorageInterface
 {
     /**
-     * Returns current session key. Throws an exception when cannot read session key from the storage.
-     * Returns null if there is no started form.
+     * Returns session key from the storage. Returns null if there is no saved session key.
+     * Throws an exception when cannot read session key from the storage.
      *
      * @throws ReadSessionKeyException
      */
-    public function getCurrent(): ?string;
+    public function get(string $key): ?string;
 
     /**
-     * Save current session key to the storage.
+     * Saves session key into the storage.
      */
-    public function setCurrent(string $sessionKey): void;
+    public function put(string $key, string $sessionKey): void;
 }

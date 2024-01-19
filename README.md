@@ -74,22 +74,10 @@ composer require lexal/stepped-form
     $builder = new CustomBuilder(new StepsBuilder(/* StepControlInterface */, /* DataControlInterface */));
     ```
 
-3. Create a Storage and data controllers.
-    ```php
-    use Lexal\SteppedForm\Form\DataControl;
-    use Lexal\SteppedForm\Form\StepControl;
-    use Lexal\SteppedForm\Form\Storage\DataStorage;
-
-    $storage = new InMemoryStorage(); // can use any other storage (session, database, redis, etc.)
-    $stepControl = new StepControl($storage);
-    $dataControl = new DataControl(new DataStorage($storage));
-    ```
-
-4. Create a Session storage to save current form session key and have ability to split one form into different sessions
-   depending on initial user input (e.g. customer id). Use default `SessionControl` when there is no need to split
+3. Create a Session storage to save current form session key and have ability to split one form into different sessions
+   depending on initial user input (e.g. customer id). Use default `NullSessionStorage` when there is no need to split
    form sessions or there is no dependency on initial user input.
    ```php
-   use Lexal\SteppedForm\Form\SessionControl;
    use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
    
    final class SessionStorage implements SessionStorageInterface
@@ -106,8 +94,20 @@ composer require lexal/stepped-form
        }
    }
 
-   $sessionControl = new SessionControl(new SessionStorage());
+   $sessionControl = new SessionStorage();
    ```
+
+4. Create a Storage and data controllers.
+    ```php
+    use Lexal\SteppedForm\Form\DataControl;
+    use Lexal\SteppedForm\Form\StepControl;
+    use Lexal\SteppedForm\Form\Storage\DataStorage;
+    use Lexal\SteppedForm\Form\Storage\FormStorage;
+
+    $storage = new FormStorage(new InMemoryStorage(), new InMemorySessionStorage()); // can use any other storage (session, database, redis, etc.)
+    $stepControl = new StepControl($storage);
+    $dataControl = new DataControl(new DataStorage($storage));
+    ```
 
 5. Create an Event Dispatcher.
     ```php
@@ -138,7 +138,6 @@ composer require lexal/stepped-form
         $builder,
         $dispatcher,
         new SimpleEntityCopy(),
-        $sessionControl, // default storage for session control is NullSessionStorage
     );
     ```
 

@@ -16,7 +16,7 @@ final class DataStorage implements DataStorageInterface
 {
     private const STORAGE_KEY = '__STEPS__';
 
-    public function __construct(private readonly StorageInterface $storage)
+    public function __construct(private readonly FormStorageInterface $storage)
     {
     }
 

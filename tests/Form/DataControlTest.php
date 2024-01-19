@@ -7,6 +7,7 @@ namespace Lexal\SteppedForm\Tests\Form;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
 use Lexal\SteppedForm\Form\DataControl;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
+use Lexal\SteppedForm\Form\Storage\FormStorage;
 use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepBehaviourInterface;
 use Lexal\SteppedForm\Step\StepInterface;
@@ -22,7 +23,7 @@ final class DataControlTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataStorage = new DataStorage(new InMemoryStorage());
+        $this->dataStorage = new DataStorage(new FormStorage(new InMemoryStorage()));
         $this->dataControl = new DataControl($this->dataStorage);
     }
 

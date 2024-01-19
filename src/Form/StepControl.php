@@ -6,14 +6,14 @@ namespace Lexal\SteppedForm\Form;
 
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
-use Lexal\SteppedForm\Form\Storage\StorageInterface;
+use Lexal\SteppedForm\Form\Storage\FormStorageInterface;
 use Lexal\SteppedForm\Step\StepKey;
 
 final class StepControl implements StepControlInterface
 {
     private const STORAGE_KEY = '__CURRENT_STEP__';
 
-    public function __construct(private readonly StorageInterface $storage)
+    public function __construct(private readonly FormStorageInterface $storage)
     {
     }
 

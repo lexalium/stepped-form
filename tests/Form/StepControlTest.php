@@ -7,6 +7,7 @@ namespace Lexal\SteppedForm\Tests\Form;
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\FormIsNotStartedException;
 use Lexal\SteppedForm\Form\StepControl;
+use Lexal\SteppedForm\Form\Storage\FormStorage;
 use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Tests\InMemoryStorage;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +18,7 @@ final class StepControlTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->stepControl = new StepControl(new InMemoryStorage());
+        $this->stepControl = new StepControl(new FormStorage(new InMemoryStorage()));
     }
 
     public function testSetAndGetCurrent(): void

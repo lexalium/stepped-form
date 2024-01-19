@@ -6,6 +6,7 @@ namespace Lexal\SteppedForm\Tests\Form\Storage;
 
 use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use Lexal\SteppedForm\Form\Storage\DataStorage;
+use Lexal\SteppedForm\Form\Storage\FormStorage;
 use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Tests\InMemoryStorage;
 use PHPUnit\Framework\TestCase;
@@ -16,7 +17,7 @@ final class DataStorageTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->dataStorage = new DataStorage(new InMemoryStorage());
+        $this->dataStorage = new DataStorage(new FormStorage(new InMemoryStorage()));
     }
 
     /**

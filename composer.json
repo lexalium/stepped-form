@@ -49,7 +49,7 @@
         "infection": "infection -j4 --only-covered",
         "tests": [
             "@phpcs",
-            "phpstan",
+            "@phpstan",
             "@phpunit",
             "@infection"
         ]

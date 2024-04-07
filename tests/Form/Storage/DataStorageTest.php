@@ -66,8 +66,51 @@ final class DataStorageTest extends TestCase
         self::assertFalse($this->dataStorage->has(new StepKey('key3')));
 
         self::assertEquals(['id' => 5], $this->dataStorage->get(new StepKey('key')));
-        self::assertEquals(['id' => 8], $this->dataStorage->get(new StepKey('key2')));
+        self::assertEquals(['id' => 5], $this->dataStorage->get(new StepKey('key2')));
         self::assertNull($this->dataStorage->get(new StepKey('key3')));
+    }
+
+    public function testPutWithoutAnyChanges(): void
+    {
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 8]);
+        $this->dataStorage->put(new StepKey('key3'), ['id' => 9]);
+
+        self::assertEquals(['id' => 8], $this->dataStorage->get(new StepKey('key2')));
+        self::assertEquals(['id' => 9], $this->dataStorage->get(new StepKey('key3')));
+
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 8]);
+
+        self::assertEquals(['id' => 8], $this->dataStorage->get(new StepKey('key2')));
+        self::assertEquals(['id' => 9], $this->dataStorage->get(new StepKey('key3')));
+    }
+
+    public function testPutSkipReflect(): void
+    {
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 8]);
+        $this->dataStorage->put(new StepKey('key3'), ['id' => 9]);
+
+        self::assertEquals(['id' => 8], $this->dataStorage->get(new StepKey('key2')));
+        self::assertEquals(['id' => 9], $this->dataStorage->get(new StepKey('key3')));
+
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 8]);
+
+        self::assertEquals(['id' => 8], $this->dataStorage->get(new StepKey('key2')));
+        self::assertEquals(['id' => 9], $this->dataStorage->get(new StepKey('key3')));
+    }
+
+    public function testPutAndReflectToNextEntities(): void
+    {
+        $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 8]);
+        $this->dataStorage->put(new StepKey('key3'), ['id' => 9]);
+        $this->dataStorage->put(new StepKey('key4'), ['id' => 10]);
+
+        $this->dataStorage->put(new StepKey('key2'), ['id' => 8, 'name' => 'name']);
+
+        self::assertEquals(['id' => 5], $this->dataStorage->get(new StepKey('key')));
+        self::assertEquals(['id' => 8, 'name' => 'name'], $this->dataStorage->get(new StepKey('key2')));
+        self::assertEquals(['id' => 9, 'name' => 'name'], $this->dataStorage->get(new StepKey('key3')));
+        self::assertEquals(['id' => 10, 'name' => 'name'], $this->dataStorage->get(new StepKey('key4')));
     }
 
     public function testForgetAfter(): void

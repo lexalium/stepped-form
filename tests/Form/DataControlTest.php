@@ -80,7 +80,7 @@ final class DataControlTest extends TestCase
     {
         $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
         $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
-        $this->dataStorage->put(new StepKey('key3'), ['id' => 7]);
+        $this->dataStorage->put(new StepKey('key3'), ['id' => 7, 'name' => 'test']);
 
         $this->dataControl->handle(new Step(new StepKey('key2'), $step), ['id' => 99], $isDynamicForm);
 
@@ -102,7 +102,7 @@ final class DataControlTest extends TestCase
         yield 'dynamic form and step implements StepBehaviourInterface with forget = false' => [
             self::createStepBehaviourStep(false),
             true,
-            ['id' => 7],
+            ['id' => 99, 'name' => 'test'],
         ];
 
         yield 'dynamic form and step does not implement StepBehaviourInterface' => [
@@ -120,13 +120,13 @@ final class DataControlTest extends TestCase
         yield 'static form and step implements StepBehaviourInterface with forget = false' => [
             self::createStepBehaviourStep(false),
             false,
-            ['id' => 7],
+            ['id' => 99, 'name' => 'test'],
         ];
 
         yield 'static form and step does not implement StepBehaviourInterface' => [
             self::createSimpleStep(),
             false,
-            ['id' => 7],
+            ['id' => 99, 'name' => 'test'],
         ];
     }
 

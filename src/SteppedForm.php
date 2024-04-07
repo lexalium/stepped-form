@@ -35,8 +35,16 @@ final class SteppedForm implements SteppedFormInterface
         private readonly FormStorageInterface $storage,
         private readonly FormBuilderInterface $builder,
         private readonly EventDispatcherInterface $dispatcher,
-        private readonly EntityCopyInterface $entityCopy,
+        private readonly ?EntityCopyInterface $entityCopy = null,
     ) {
+        if ($this->entityCopy !== null) {
+            trigger_deprecation(
+                'lexal/stepped-form',
+                '3.0.1',
+                'Passing custom EntityCopy is deprecated and will be removed, pass null instead.',
+            );
+        }
+
         $this->steps = new Steps();
     }
 
@@ -225,7 +233,7 @@ final class SteppedForm implements SteppedFormInterface
             $entity = $this->getStepEntity($previous);
         }
 
-        return $this->entityCopy->copy($entity);
+        return EntityCopy::copy($entity);
     }
 
     /**

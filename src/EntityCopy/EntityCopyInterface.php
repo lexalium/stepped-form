@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\EntityCopy;
 
+/**
+ * @deprecated 3.0.1 Passing custom entity copy is deprecated
+ */
 interface EntityCopyInterface
 {
     /**

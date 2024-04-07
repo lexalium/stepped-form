@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Tests;
 
-use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
 use Lexal\SteppedForm\EventDispatcher\Event\BeforeHandleStep;
 use Lexal\SteppedForm\EventDispatcher\Event\FormFinished;
 use Lexal\SteppedForm\EventDispatcher\EventDispatcherInterface;
@@ -66,7 +65,6 @@ final class SteppedFormTest extends TestCase
             $this->storage,
             $this->builder,
             $this->dispatcher,
-            new SimpleEntityCopy(),
         );
     }
 
@@ -355,7 +353,6 @@ final class SteppedFormTest extends TestCase
             $this->storage,
             new DynamicFormBuilder($handleReturn),
             $this->dispatcher, // @phpstan-ignore-line
-            new SimpleEntityCopy(),
         );
 
         $this->storage->setCurrentSession('main');

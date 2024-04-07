@@ -7,6 +7,9 @@ namespace Lexal\SteppedForm\EntityCopy;
 use function is_array;
 use function is_object;
 
+/**
+ * @deprecated 3.0.1 passing entity copy service into stepper form deprecated
+ */
 final class SimpleEntityCopy implements EntityCopyInterface
 {
     public function copy(mixed $entity): mixed

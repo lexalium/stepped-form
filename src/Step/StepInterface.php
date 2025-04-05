@@ -6,6 +6,9 @@ namespace Lexal\SteppedForm\Step;
 
 use Lexal\SteppedForm\Exception\StepHandleException;
 
+/**
+ * @template TEntity of object
+ */
 interface StepInterface
 {
     /**
@@ -14,7 +17,11 @@ interface StepInterface
      *
      * $data will have null value when the step is not renderable.
      *
+     * @param TEntity&object $entity
+     *
+     * @return TEntity&object
+     *
      * @throws StepHandleException
      */
-    public function handle(mixed $entity, mixed $data): mixed;
+    public function handle(object $entity, mixed $data): object;
 }

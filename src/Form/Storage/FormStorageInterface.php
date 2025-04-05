@@ -11,7 +11,7 @@ interface FormStorageInterface
     /**
      * Sets current session key for the form.
      */
-    public function setCurrentSession(string $sessionKey): void;
+    public function setCurrentSession(string $session): void;
 
     /**
      * Returns data from the form storage by key.

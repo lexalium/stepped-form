@@ -12,7 +12,7 @@ use Lexal\SteppedForm\Tests\Step\RenderStep;
 
 final class DynamicFormBuilder implements FormBuilderInterface
 {
-    public function __construct(private readonly mixed $handleReturn)
+    public function __construct(private readonly object $handleReturn)
     {
     }
 
@@ -21,12 +21,12 @@ final class DynamicFormBuilder implements FormBuilderInterface
         return true;
     }
 
-    public function build(mixed $entity): Steps
+    public function build(object $entity): Steps
     {
         $step1 = new Step(new StepKey('key1'), new RenderStep(handleReturn: $this->handleReturn));
         $step2 = new Step(new StepKey('key2'), new RenderStep());
         $step3 = new Step(new StepKey('key3'), new RenderStep());
 
-        return isset($entity['rebuild']) ? new Steps([$step1, $step2, $step3]) : new Steps([$step1, $step3]);
+        return isset($entity->rebuild) ? new Steps([$step1, $step2, $step3]) : new Steps([$step1, $step3]);
     }
 }

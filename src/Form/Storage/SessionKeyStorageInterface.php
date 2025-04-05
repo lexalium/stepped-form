@@ -6,7 +6,7 @@ namespace Lexal\SteppedForm\Form\Storage;
 
 use Lexal\SteppedForm\Exception\ReadSessionKeyException;
 
-interface SessionStorageInterface
+interface SessionKeyStorageInterface
 {
     /**
      * Returns session key from the storage. Returns null if there is no saved session key.
@@ -19,5 +19,5 @@ interface SessionStorageInterface
     /**
      * Saves session key into the storage.
      */
-    public function put(string $key, string $sessionKey): void;
+    public function put(string $key, string $session): void;
 }

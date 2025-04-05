@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Form;
 
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
-use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\FormNotStartedException;
 use Lexal\SteppedForm\Step\StepKey;
 
 interface StepControlInterface
 {
     /**
-     * Returns current step key. null - if form is not started.
+     * Returns current step key. null - if form has not been started.
      */
     public function getCurrent(): ?string;
 
@@ -21,7 +21,7 @@ interface StepControlInterface
     public function setCurrent(StepKey $key): void;
 
     /**
-     * Throws an exception when the form had already started.
+     * Throws an exception when the form had already been started.
      *
      * @throws AlreadyStartedException
      */
@@ -30,7 +30,7 @@ interface StepControlInterface
     /**
      * Throws an exception when the form hasn't stated yet.
      *
-     * @throws FormIsNotStartedException
+     * @throws FormNotStartedException
      */
     public function throwIfNotStarted(): void;
 }

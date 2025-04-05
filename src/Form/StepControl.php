@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Form;
 
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
-use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\FormNotStartedException;
 use Lexal\SteppedForm\Form\Storage\FormStorageInterface;
 use Lexal\SteppedForm\Step\StepKey;
 
@@ -41,7 +41,7 @@ final class StepControl implements StepControlInterface
         $current = $this->storage->get(self::STORAGE_KEY);
 
         if ($current === null) {
-            throw new FormIsNotStartedException();
+            throw new FormNotStartedException();
         }
     }
 }

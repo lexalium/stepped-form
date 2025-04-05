@@ -9,17 +9,18 @@ use Lexal\SteppedForm\ObjectDefinition;
 use function is_array;
 use function is_object;
 
+/**
+ * @template TEntity of object
+ */
 final class ChangeSet
 {
     /**
-     * @param object|array<string, mixed> $current
-     * @param ($current is object ? object : array<string, mixed>) $previous
+     * @param TEntity&object $current
+     * @param TEntity&object $previous
      */
-    public static function compute(object|array $current, object|array $previous): ChangeSetTypeInterface
+    public static function compute(object $current, object $previous): ChangeSetTypeInterface
     {
-        return is_array($current)
-            ? self::computeArraysChangeSet($current, $previous)[1]
-            : self::computeObjectsChangeSet($current, $previous)[1];
+        return self::computeObjectsChangeSet($current, $previous)[1];
     }
 
     /**

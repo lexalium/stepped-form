@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm;
 
 use ReflectionObject;
+use stdClass;
 
 use function array_key_exists;
 use function is_array;
+use function is_numeric;
 use function is_object;
 
 final class EntityCopy
@@ -64,10 +66,30 @@ final class EntityCopy
                 ? self::copy($property->getValue($object), $replace[$property->name])
                 : self::copy($property->getValue($object));
 
+            unset($replace[$property->name]);
+
             $property->setValue($newObject, $value);
         }
 
-        return $newObject;
+        return self::addMissedDynamicProperties($newObject, $replace);
+    }
+
+    /**
+     * @param array<string, mixed> $properties
+     */
+    private static function addMissedDynamicProperties(object $object, array $properties): object
+    {
+        if (!$object instanceof stdClass) {
+            return $object;
+        }
+
+        foreach ($properties as $property => $value) {
+            if (!is_numeric($property)) {
+                $object->{$property} = self::copy($value);
+            }
+        }
+
+        return $object;
     }
 
     private static function cloneObject(ReflectionObject $reflectionObject, object $object): object

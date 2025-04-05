@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Lexal\SteppedForm\Form\Builder;
 
-use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\Steps;
 
+/**
+ * @template TEntity of object
+ */
 interface FormBuilderInterface
 {
     /**
@@ -17,7 +19,7 @@ interface FormBuilderInterface
     /**
      * Builds a Steps collection by the form entity.
      *
-     * @return Steps<Step>
+     * @param TEntity&object $entity
      */
-    public function build(mixed $entity): Steps;
+    public function build(object $entity): Steps;
 }

@@ -9,6 +9,6 @@
     "@default": true
   },
   "testFramework": "phpunit",
-  "minCoveredMsi": 88,
-  "timeout": 3,
+  "minCoveredMsi": 94,
+  "timeout": 1,
 }

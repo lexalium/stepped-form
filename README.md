@@ -40,7 +40,7 @@ composer require lexal/stepped-form
     
     final class CustomerStep implements StepInterface
     {
-        public function handle(mixed $entity, mixed $data): mixed
+        public function handle(object $entity, mixed $data): object
         {
             // do some logic here
             
@@ -62,7 +62,7 @@ composer require lexal/stepped-form
         {
         }
 
-        public function build(mixed $entity): Steps
+        public function build(object $entity): Steps
         {
             $this->builder->add('customer', new CustomerStep());
             // Some additional steps
@@ -74,13 +74,13 @@ composer require lexal/stepped-form
     $builder = new CustomBuilder(new StepsBuilder(/* StepControlInterface */, /* DataControlInterface */));
     ```
 
-3. Create a Session storage to save current form session key and have ability to split one form into different sessions
-   depending on initial user input (e.g. customer id). Use default `NullSessionStorage` when there is no need to split
+3. Create a storage to save current form session key and have ability to split one form into different sessions
+   depending on initial user input (e.g. customer id). Use default `NullSessionKeyStorage` when there is no need to split
    form sessions or there is no dependency on initial user input.
    ```php
-   use Lexal\SteppedForm\Form\Storage\SessionStorageInterface;
+   use Lexal\SteppedForm\Form\Storage\SessionKeyStorageInterface;
    
-   final class SessionStorage implements SessionStorageInterface
+   final class SessionKeyStorage implements SessionKeyStorageInterface
    {
        public function get(): ?string
        {
@@ -94,7 +94,32 @@ composer require lexal/stepped-form
        }
    }
 
-   $sessionControl = new SessionStorage();
+   $sessionKeyStorage = new SessionKeyStorage();
+   ```
+   
+   Create a Storage to store steps data.
+   ```php
+   use Lexal\SteppedForm\Form\Storage\StorageInterface;
+   
+   final class Storage implements StorageInterface
+   {
+       public function get(string $key, string $session, mixed $default = null): mixed
+       {
+           // get data by key and form session
+       }
+
+       public function put(string $key, string $session, mixed $data): void
+       {
+           // save data by key and form session
+       }
+
+       public function clear(string $session): void
+       {
+           // clear storage by form session
+       }
+   }
+
+   $storage = new Storage();
    ```
 
 4. Create a Storage and data controllers.
@@ -104,9 +129,9 @@ composer require lexal/stepped-form
     use Lexal\SteppedForm\Form\Storage\DataStorage;
     use Lexal\SteppedForm\Form\Storage\FormStorage;
 
-    $storage = new FormStorage(new InMemoryStorage(), new InMemorySessionStorage()); // can use any other storage (session, database, redis, etc.)
-    $stepControl = new StepControl($storage);
-    $dataControl = new DataControl(new DataStorage($storage));
+    $formStorage = new FormStorage($storage, $sessionKeyStorage); // can use any other storage (session, database, redis, etc.)
+    $stepControl = new StepControl($formStorage);
+    $dataControl = new DataControl(new DataStorage($formStorage));
     ```
 
 5. Create an Event Dispatcher.
@@ -128,16 +153,13 @@ composer require lexal/stepped-form
 
 6. Create a Stepped Form.
     ```php
-    use Lexal\SteppedForm\EntityCopy\SimpleEntityCopy;
     use Lexal\SteppedForm\SteppedForm;
 
     $form = new SteppedForm(
         $dataControl,
         $stepControl,
-        $storage,
         $builder,
         $dispatcher,
-        new SimpleEntityCopy(),
     );
     ```
 
@@ -145,7 +167,7 @@ composer require lexal/stepped-form
     ```php
     /* Starts a new form session */
     $form->start(
-        /* entity for initialize a form state */,
+        /* entity that is used as initial form state */,
         /* unique session key if you need to split different sessions of one form */,
     );
 
@@ -153,7 +175,7 @@ composer require lexal/stepped-form
     $form->render('key');
 
     /* Handles a step logic and saves a new form state */
-    $form->handle('key', /* any submitted data */);
+    $form->handle('key', /* any user submitted data */);
 
     /* Cancels form session */
     $form->cancel();
@@ -177,12 +199,12 @@ use Lexal\SteppedForm\Step\TemplateDefinition;
     
 final class CustomerStep implements RenderStepInterface
 {
-    public function getTemplateDefinition(mixed $entity, Steps $steps): TemplateDefinition
+    public function getTemplateDefinition(object $entity, Steps $steps): TemplateDefinition
     {
         return new TemplateDefinition('customer', ['customer' => $entity]);
     }
 
-    public function handle(mixed $entity, mixed $data): mixed
+    public function handle(object $entity, mixed $data): object
     {
         // do some logic here
         $entity->name = $data['name'];
@@ -193,8 +215,8 @@ final class CustomerStep implements RenderStepInterface
 }
 ```
 
-The second type of step must implement `StepInterface`. Method `handle` can have business logic by calculating data
-and must return an updated form entity. Method will receive a `null` or previous renderable step submitted data as
+The second type of step must implement `StepInterface`. Method `handle` can have business logic for calculating data
+and must return an updated form entity. Method will receive a `null` or previously submitted data as
 a second argument.
 
 ```php
@@ -204,7 +226,7 @@ final class TaxStep implements StepInterface
 {
     private const TAX_PERCENT = 20;
 
-    public function handle(mixed $entity, mixed $data): mixed
+    public function handle(object $entity, mixed $data): object
     {
         // do some logic here
         $entity->tax = $entity->amount * self::TAX_PERCENT;
@@ -220,7 +242,7 @@ final class TaxStep implements StepInterface
 
 The Stepped Form uses a Form Builder for building a Steps collection by the form entity.
 
-Stepped Form can have a fixed count of steps or different steps depending on previous user input data.
+Stepped Form can have a fixed list of steps or dynamic one depending on the previous user input data.
 
 Example of Stepped Form with fixed list of steps:
 ```php
@@ -248,7 +270,7 @@ final class CustomBuilder implements FormBuilderInterface
     {
     }
 
-    public function build(mixed $entity): Steps
+    public function build(object $entity): Steps
     {
         $this->builder->add('customer', new CustomerStep());
 
@@ -270,18 +292,21 @@ final class CustomBuilder implements FormBuilderInterface
 
 ## Form Data Storage
 
-Stepped Form uses a storage to store current step key and handled steps data.
-The package has implementation of simple in-memory storage (ArrayStorage). To create
-your own storage (e.g. session, database, redis) implement `StorageInterface` interface.
+Stepped Form uses a storage to store current step key, handled steps data and a form session key.
+It's possible to create your own storage (e.g. session, database, redis) by implementing
+`SessionKeyStorageInterface` and `StorageInterface` interfaces.
+
+Stepped Form uses `NullSessionKeyStorage` as `SessionKeyStorageInterface` by default, which means it
+always uses only one session key.
 
 `StepControlInterface` and `DataControlInterface` help to work with current step key
 and step data respectively.
 
-Dynamic stepped form will trigger clearing all steps data after current one when handle step.
+Dynamic stepped form triggers clearing all steps data after current one after handling it.
 Steps data are not cleared from the storage for static forms or when current step implements
 `StepBehaviourInterface` and method `forgetDataAfterCurrent` returns `false`.
 
-Example of skipping data storage from clearing after currently submitted step (for dynamic forms):
+Example of skipping data storage from being cleared after currently submitted step (for dynamic forms):
 ```php
 use Lexal\SteppedForm\Step\RenderStepInterface;
 use Lexal\SteppedForm\Step\StepBehaviourInterface;
@@ -290,59 +315,48 @@ use Lexal\SteppedForm\Step\TemplateDefinition;
 
 final class CustomerStep implements StepBehaviourInterface
 {
-    public function getTemplateDefinition(mixed $entity, Steps $steps): TemplateDefinition
+    public function getTemplateDefinition(object $entity, Steps $steps): TemplateDefinition
     {
         // render
     }
 
-    public function handle(mixed $entity, mixed $data): mixed
+    public function handle(object $entity, mixed $data): object
     {
         // handle
     }
     
-    public function forgetDataAfterCurrent(mixed $entity): bool
+    public function forgetDataAfterCurrent(object $entity): bool
     {
-        return $entity->code === 'NA'; // remove form data after current only when code equals to 'NA'
+        return $entity->code === 'NA'; // remove form data after current step only when code equals to 'NA'
     }
 }
 ```
 
 <div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
 
-## Entity Copy
-
-The Stepped Form uses an Entity Copy for passing previous submitted entity copy to the step `handle`
-method and saving it to the storage.
-
-The package already has `SimpleEntityCopy` implementation of `EntityCopyInterface`. But you have to
-implement `__clone` method to clone internal objects if you use objects as a form entity.
-
-Alternative for the package `SimpleEntityCopy` is [`DeepClone`](https://github.com/myclabs/DeepCopy).
-
-<div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
-
 ## Form Events
 
 The form can dispatch the following events:
-1. **BeforeHandleStep** - will dispatch before step handling. Event contains data passed to the handle
+1. **BeforeHandleStep** - is dispatched before handling the step. Event contains data passed to the handle
    method, form entity, and step instance. Event listener can update event data after some validation.
-2. **FormFinished** - will dispatch when there is no next step after handling current one. Event contains
-   form entity.
+2. **FormFinished** - is dispatched when there is no next step after handling current one. Event contains
+   a final form entity.
 
 <div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
 
 ## Form Exceptions
 
-The form can dispatch the following exceptions:
+The form can throw the following exceptions:
 1. **AlreadyStartedException** - when trying to start already started form.
 2. **EntityNotFoundException** - when previous step entity not found for rendering or handling step.
 3. **EventDispatcherException** - on dispatching events.
-4. **FormIsNotStartedException** - when trying to render, handle or cancel not started form.
+4. **FormNotStartedException** - when trying to render, handle or cancel not started form.
 5. **NoStepsAddedException** - when trying to start form without steps.
 6. **StepHandleException** - on handling step.
-7. **StepIsNotSubmittedException** - when one of the previous step is not submitted.
+7. **StepNotSubmittedException** - when one of the previous step has not been submitted.
 8. **StepNotFoundException** - when trying to render or handle not existed step.
 9. **StepNotRenderableException** - when trying to render not renderable step.
+10. **ReadSessionKeyException** - when can't get current session key.
 
 <div style="text-align: right">(<a href="#readme-top">back to top</a>)</div>
 

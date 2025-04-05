@@ -7,17 +7,25 @@ namespace Lexal\SteppedForm\Form\Storage;
 use Lexal\SteppedForm\Exception\KeysNotFoundInStorageException;
 use Lexal\SteppedForm\Form\ChangeSet\ChangeSet;
 use Lexal\SteppedForm\Step\StepKey;
+use RuntimeException;
 
 use function array_keys;
 use function array_pop;
 use function array_search;
 use function array_slice;
-use function is_array;
-use function is_object;
+use function count;
+use function get_debug_type;
+use function sprintf;
 
+/**
+ * @template TEntity of object
+ *
+ * @template-implements DataStorageInterface<TEntity>
+ */
 final class DataStorage implements DataStorageInterface
 {
     private const STORAGE_KEY = '__STEPS__';
+    private const KEY_INITIALIZE_ENTITY = '__INITIALIZE__';
 
     public function __construct(private readonly FormStorageInterface $storage)
     {
@@ -28,23 +36,50 @@ final class DataStorage implements DataStorageInterface
         return isset($this->getData()[$key->value]);
     }
 
-    public function get(StepKey $key): mixed
+    public function getInitializeEntity(): object
+    {
+        $entity = $this->storage->get(self::KEY_INITIALIZE_ENTITY);
+
+        if ($entity === null) {
+            throw new RuntimeException(
+                sprintf('%s method can be called only within stepped-form context.', __METHOD__),
+            );
+        }
+
+        return $entity;
+    }
+
+    public function get(StepKey $key): object|null
     {
         return $this->getData()[$key->value] ?? null;
     }
 
-    public function getLast(): mixed
+    public function getLast(): object
     {
         $keys = $this->keys();
 
-        if (!$keys) {
+        $lastKey = array_pop($keys);
+
+        if ($lastKey === null) {
             throw new KeysNotFoundInStorageException();
         }
 
-        return $this->get(new StepKey(array_pop($keys)));
+        $entity = $this->get(new StepKey($lastKey));
+
+        if ($entity === null) {
+            throw new KeysNotFoundInStorageException();
+        }
+
+        return $entity;
     }
 
-    public function put(StepKey $key, mixed $entity): void
+    public function initialize(object $entity, string $session): void
+    {
+        $this->storage->setCurrentSession($session);
+        $this->storage->put(self::KEY_INITIALIZE_ENTITY, $entity);
+    }
+
+    public function put(StepKey $key, object $entity): void
     {
         $data = $this->getData();
 
@@ -68,8 +103,13 @@ final class DataStorage implements DataStorageInterface
         }
     }
 
+    public function clear(): void
+    {
+        $this->storage->clear();
+    }
+
     /**
-     * @return array<string, mixed>
+     * @return array<string, TEntity&object>
      */
     private function getData(): array
     {
@@ -85,43 +125,44 @@ final class DataStorage implements DataStorageInterface
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param array<string, TEntity&object> $data
      */
-    private function checkAvailabilityToPut(string $key, mixed $entity, array $data): void
+    private function checkAvailabilityToPut(string $key, object $entity, array $data): void
     {
         $keys = $this->keys();
         $index = $this->getIndex($key);
 
-        if ($index === null || $index <= 0 || !isset($keys[$index - 1], $data[$keys[$index - 1]])) {
+        if ($index === null) {
+            $index = count($keys);
+        }
+
+        if (!isset($keys[$index - 1], $data[$keys[$index - 1]])) {
             return;
         }
 
         $previous = $data[$keys[$index - 1]];
 
-        if (
-            (is_array($entity) && is_array($previous))
-            || (is_object($entity) && is_object($previous) && $entity::class === $previous::class)
-        ) {
-            return;
+        if ($entity::class !== $previous::class) {
+            throw new RuntimeException(
+                sprintf(
+                    'Entities should have the same type between steps. Expected: %s. Given: %s.',
+                    get_debug_type($entity),
+                    get_debug_type($previous),
+                ),
+            );
         }
-
-        trigger_deprecation(
-            'lexal/stepped-form',
-            '3.1.0',
-            'Entities should have the same type between steps. Only array or object allowed to use.',
-        );
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param array<string, TEntity&object> $data
      *
-     * @return array<string, mixed>
+     * @return array<string, TEntity&object>
      */
-    private function reflect(string $key, mixed $entity, array $data): array
+    private function reflect(string $key, object $entity, array $data): array
     {
         $index = $this->getIndex($key);
 
-        if ($index === null && !isset($data[$key])) {
+        if ($index === null || !isset($data[$key])) {
             return $data;
         }
 

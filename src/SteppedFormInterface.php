@@ -6,9 +6,9 @@ namespace Lexal\SteppedForm;
 
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
 use Lexal\SteppedForm\Exception\EntityNotFoundException;
-use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\FormNotStartedException;
 use Lexal\SteppedForm\Exception\NoStepsAddedException;
-use Lexal\SteppedForm\Exception\StepIsNotSubmittedException;
+use Lexal\SteppedForm\Exception\StepNotSubmittedException;
 use Lexal\SteppedForm\Exception\StepNotFoundException;
 use Lexal\SteppedForm\Exception\StepNotRenderableException;
 use Lexal\SteppedForm\Exception\SteppedFormErrorsException;
@@ -21,19 +21,19 @@ interface SteppedFormInterface
     /**
      * Returns a form data.
      *
-     * @throws FormIsNotStartedException
+     * @throws FormNotStartedException
      */
-    public function getEntity(): mixed;
+    public function getEntity(): object;
 
     /**
      * Starts a new form session and return a first Step Key.
-     * If already started will throw AlreadyStartedException exception.
+     * Throws AlreadyStartedException exception if it has already been started.
      *
      * @throws NoStepsAddedException
      * @throws AlreadyStartedException
      * @throws SteppedFormErrorsException
      */
-    public function start(mixed $entity, string $sessionKey = FormStorageInterface::DEFAULT_SESSION_KEY): ?StepKey;
+    public function start(object $entity, string $session = FormStorageInterface::DEFAULT_SESSION_KEY): ?StepKey;
 
     /**
      * Returns a Template Definition for given step.
@@ -41,8 +41,8 @@ interface SteppedFormInterface
      * @throws StepNotFoundException
      * @throws StepNotRenderableException
      * @throws EntityNotFoundException
-     * @throws FormIsNotStartedException
-     * @throws StepIsNotSubmittedException
+     * @throws FormNotStartedException
+     * @throws StepNotSubmittedException
      */
     public function render(StepKey $key): TemplateDefinition;
 
@@ -52,15 +52,15 @@ interface SteppedFormInterface
      * @throws StepNotFoundException
      * @throws SteppedFormErrorsException
      * @throws EntityNotFoundException
-     * @throws FormIsNotStartedException
-     * @throws StepIsNotSubmittedException
+     * @throws FormNotStartedException
+     * @throws StepNotSubmittedException
      */
     public function handle(StepKey $key, mixed $data): ?StepKey;
 
     /**
      * Cancels current form session.
      *
-     * @throws FormIsNotStartedException
+     * @throws FormNotStartedException
      */
     public function cancel(): void;
 }

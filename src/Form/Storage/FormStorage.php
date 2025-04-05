@@ -12,13 +12,13 @@ final class FormStorage implements FormStorageInterface
 
     public function __construct(
         private readonly StorageInterface $storage,
-        private readonly SessionStorageInterface $sessionStorage = new NullSessionStorage(),
+        private readonly SessionKeyStorageInterface $sessionStorage = new NullSessionKeyStorage(),
     ) {
     }
 
-    public function setCurrentSession(string $sessionKey): void
+    public function setCurrentSession(string $session): void
     {
-        $this->sessionStorage->put(self::STORAGE_KEY, $sessionKey);
+        $this->sessionStorage->put(self::STORAGE_KEY, $session);
     }
 
     /**

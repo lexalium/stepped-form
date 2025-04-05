@@ -7,5 +7,13 @@ namespace Lexal\SteppedForm\Tests;
 class SimpleParent
 {
     public static string $text = '';
-    private int $price = 0; // @phpstan-ignore-line
+
+    public function __construct(private int $price = 0)
+    {
+    }
+
+    public function getPrice(): int
+    {
+        return $this->price;
+    }
 }

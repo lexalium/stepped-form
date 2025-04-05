@@ -8,7 +8,7 @@ use Lexal\SteppedForm\Step\StepKey;
 
 use function sprintf;
 
-final class StepIsNotSubmittedException extends SteppedFormException
+final class StepNotSubmittedException extends SteppedFormException
 {
     private function __construct(string $message, public readonly StepKey $key, public readonly ?StepKey $renderable)
     {
@@ -17,11 +17,11 @@ final class StepIsNotSubmittedException extends SteppedFormException
 
     public static function finish(StepKey $key, ?StepKey $renderable): self
     {
-        return new self(sprintf('The Step [%s] is not submitted yet.', $key), $key, $renderable);
+        return new self(sprintf('The step [%s] has not been submitted yet.', $key), $key, $renderable);
     }
 
     public static function previous(StepKey $key, ?StepKey $renderable): self
     {
-        return new self(sprintf('Previous step [%s] is not submitted.', $key), $key, $renderable);
+        return new self(sprintf('Previous step [%s] has not been submitted.', $key), $key, $renderable);
     }
 }

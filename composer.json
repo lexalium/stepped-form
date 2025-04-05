@@ -19,9 +19,9 @@
     },
     "require-dev": {
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
-        "infection/infection": "^0.29.14",
+        "infection/infection": "<=0.29.9",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^12.1",
+        "phpunit/phpunit": "^10.5",
         "roave/security-advisories": "dev-latest",
         "webimpress/coding-standard": "^1.4"
     },

@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace Lexal\SteppedForm\Tests\Form;
 
 use Lexal\SteppedForm\Exception\AlreadyStartedException;
-use Lexal\SteppedForm\Exception\FormIsNotStartedException;
+use Lexal\SteppedForm\Exception\FormNotStartedException;
 use Lexal\SteppedForm\Form\StepControl;
 use Lexal\SteppedForm\Form\Storage\FormStorage;
 use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Tests\InMemoryStorage;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\TestCase;
 
 final class StepControlTest extends TestCase
@@ -33,7 +34,7 @@ final class StepControlTest extends TestCase
     public function testThrowIfAlreadyStarted(): void
     {
         $this->expectExceptionObject(new AlreadyStartedException('key'));
-        $this->expectExceptionMessage('The form has already started.');
+        $this->expectExceptionMessage('The form has already been started.');
 
         $this->stepControl->setCurrent(new StepKey('key'));
 
@@ -46,9 +47,7 @@ final class StepControlTest extends TestCase
         }
     }
 
-    /**
-     * @doesNotPerformAssertions
-     */
+    #[DoesNotPerformAssertions]
     public function testThrowIfAlreadyStartedWithoutException(): void
     {
         $this->stepControl->throwIfAlreadyStarted();
@@ -56,15 +55,13 @@ final class StepControlTest extends TestCase
 
     public function testThrowIfNotStarted(): void
     {
-        $this->expectExceptionObject(new FormIsNotStartedException());
-        $this->expectExceptionMessage('The stepped form is not started yet.');
+        $this->expectExceptionObject(new FormNotStartedException());
+        $this->expectExceptionMessage('The form has not been started yet.');
 
         $this->stepControl->throwIfNotStarted();
     }
 
-    /**
-     * @doesNotPerformAssertions
-     */
+    #[DoesNotPerformAssertions]
     public function testThrowIfNotStartedWithoutException(): void
     {
         $this->stepControl->setCurrent(new StepKey('key'));

@@ -10,6 +10,7 @@ use Lexal\SteppedForm\Step\StepKey;
 use Lexal\SteppedForm\Step\Steps;
 use Lexal\SteppedForm\Tests\Step\RenderStep;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 
 final class StaticStepsFormBuilderTest extends TestCase
 {
@@ -29,6 +30,9 @@ final class StaticStepsFormBuilderTest extends TestCase
 
         $builder = new StaticStepsFormBuilder($steps);
 
-        self::assertEquals($steps, $builder->build(['id' => 5]));
+        $entity = new stdClass();
+        $entity->id = 5;
+
+        self::assertEquals($steps, $builder->build($entity));
     }
 }

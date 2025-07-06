@@ -8,6 +8,6 @@ final class AlreadyStartedException extends SteppedFormException
 {
     public function __construct(public readonly string $currentKey)
     {
-        parent::__construct('The form has already started.');
+        parent::__construct('The form has already been started.');
     }
 }

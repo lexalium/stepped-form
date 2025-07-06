@@ -10,6 +10,12 @@ use Psr\EventDispatcher\EventDispatcherInterface as PsrEventDispatcherInterface;
 interface EventDispatcherInterface extends PsrEventDispatcherInterface
 {
     /**
+     * @template TEvent of object
+     *
+     * @param TEvent&object $event
+     *
+     * @return TEvent&object
+     *
      * @throws EventDispatcherException
      */
     public function dispatch(object $event): object;

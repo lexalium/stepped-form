@@ -13,18 +13,18 @@ final class InMemoryStorage implements StorageInterface
      */
     private array $data = [];
 
-    public function get(string $key, string $sessionKey, mixed $default = null): mixed
+    public function get(string $key, string $session, mixed $default = null): mixed
     {
-        return $this->data[$sessionKey][$key] ?? $default;
+        return $this->data[$session][$key] ?? $default;
     }
 
-    public function put(string $key, string $sessionKey, mixed $data): void
+    public function put(string $key, string $session, mixed $data): void
     {
-        $this->data[$sessionKey][$key] = $data;
+        $this->data[$session][$key] = $data;
     }
 
-    public function clear(string $sessionKey): void
+    public function clear(string $session): void
     {
-        unset($this->data[$sessionKey]);
+        unset($this->data[$session]);
     }
 }

@@ -12,12 +12,16 @@ use Lexal\SteppedForm\Step\Step;
 use Lexal\SteppedForm\Step\StepBehaviourInterface;
 use Lexal\SteppedForm\Step\StepInterface;
 use Lexal\SteppedForm\Step\StepKey;
+use Lexal\SteppedForm\Tests\CreateObjectTrait;
 use Lexal\SteppedForm\Tests\InMemoryStorage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 final class DataControlTest extends TestCase
 {
+    use CreateObjectTrait;
+
     private DataStorage $dataStorage;
     private DataControl $dataControl;
 
@@ -27,28 +31,26 @@ final class DataControlTest extends TestCase
         $this->dataControl = new DataControl($this->dataStorage);
     }
 
-    public function testStartAndGetInitializeEntity(): void
+    public function testInitializeAndGetInitializeEntity(): void
     {
-        self::assertNull($this->dataControl->getInitializeEntity());
+        $this->dataControl->initialize(self::createObject(['id' => 5]), 'main');
 
-        $this->dataControl->start(['id' => 5]);
-
-        self::assertEquals(['id' => 5], $this->dataControl->getInitializeEntity());
+        self::assertEquals(self::createObject(['id' => 5]), $this->dataControl->getInitializeEntity());
     }
 
     public function testGetEntityWithoutSubmittedStepsAndWithInitializeEntity(): void
     {
-        $this->dataControl->start(['id' => 5]);
+        $this->dataControl->initialize(self::createObject(['id' => 5]), 'main');
 
-        self::assertEquals(['id' => 5], $this->dataControl->getEntity());
+        self::assertEquals(self::createObject(['id' => 5]), $this->dataControl->getEntity());
     }
 
     public function testGetEntityWithSubmittedSteps(): void
     {
-        $this->dataControl->start(['id' => 5]);
-        $this->dataStorage->put(new StepKey('key'), ['id' => 6]);
+        $this->dataControl->initialize(self::createObject(['id' => 5]), 'main');
+        $this->dataStorage->put(new StepKey('key'), self::createObject(['id' => 6]));
 
-        self::assertEquals(['id' => 6], $this->dataControl->getEntity());
+        self::assertEquals(self::createObject(['id' => 6]), $this->dataControl->getEntity());
     }
 
     /**
@@ -56,9 +58,9 @@ final class DataControlTest extends TestCase
      */
     public function testGetStepEntity(): void
     {
-        $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
+        $this->dataStorage->put(new StepKey('key'), self::createObject(['id' => 5]));
 
-        self::assertEquals(['id' => 5], $this->dataControl->getStepEntity(new StepKey('key')));
+        self::assertEquals(self::createObject(['id' => 5]), $this->dataControl->getStepEntity(new StepKey('key')));
     }
 
     /**
@@ -76,15 +78,19 @@ final class DataControlTest extends TestCase
      * @throws EntityNotFoundException
      */
     #[DataProvider('handleDataProvider')]
-    public function testHandle(StepInterface $step, bool $isDynamicForm, mixed $expectedDataKey3): void
+    public function testHandle(StepInterface $step, bool $isDynamicForm, ?object $expectedDataKey3): void
     {
-        $this->dataStorage->put(new StepKey('key'), ['id' => 5]);
-        $this->dataStorage->put(new StepKey('key2'), ['id' => 6]);
-        $this->dataStorage->put(new StepKey('key3'), ['id' => 7, 'name' => 'test']);
+        $this->dataStorage->put(new StepKey('key'), self::createObject(['id' => 5]));
+        $this->dataStorage->put(new StepKey('key2'), self::createObject(['id' => 6]));
+        $this->dataStorage->put(new StepKey('key3'), self::createObject(['id' => 7, 'name' => 'test']));
 
-        $this->dataControl->handle(new Step(new StepKey('key2'), $step), ['id' => 99], $isDynamicForm);
+        $this->dataControl->handle(
+            new Step(new StepKey('key2'), $step),
+            self::createObject(['id' => 99]),
+            $isDynamicForm,
+        );
 
-        self::assertEquals(['id' => 99], $this->dataControl->getStepEntity(new StepKey('key2')));
+        self::assertEquals(self::createObject(['id' => 99]), $this->dataControl->getStepEntity(new StepKey('key2')));
         self::assertEquals($expectedDataKey3, $this->dataStorage->get(new StepKey('key3')));
     }
 
@@ -102,7 +108,7 @@ final class DataControlTest extends TestCase
         yield 'dynamic form and step implements StepBehaviourInterface with forget = false' => [
             self::createStepBehaviourStep(false),
             true,
-            ['id' => 99, 'name' => 'test'],
+            self::createObject(['id' => 99, 'name' => 'test']),
         ];
 
         yield 'dynamic form and step does not implement StepBehaviourInterface' => [
@@ -120,20 +126,32 @@ final class DataControlTest extends TestCase
         yield 'static form and step implements StepBehaviourInterface with forget = false' => [
             self::createStepBehaviourStep(false),
             false,
-            ['id' => 99, 'name' => 'test'],
+            self::createObject(['id' => 99, 'name' => 'test']),
         ];
 
         yield 'static form and step does not implement StepBehaviourInterface' => [
             self::createSimpleStep(),
             false,
-            ['id' => 99, 'name' => 'test'],
+            self::createObject(['id' => 99, 'name' => 'test']),
         ];
+    }
+
+    public function testCancel(): void
+    {
+        $this->dataControl->initialize(self::createObject(['id' => 5]), 'main');
+        $this->dataStorage->put(new StepKey('key'), self::createObject(['id' => 6]));
+
+        self::assertTrue($this->dataControl->hasStepEntity(new StepKey('key')));
+
+        $this->dataControl->cancel();
+
+        self::assertFalse($this->dataControl->hasStepEntity(new StepKey('key')));
     }
 
     private static function createSimpleStep(): StepInterface
     {
         return new class () implements StepInterface {
-            public function handle(mixed $entity, mixed $data): mixed
+            public function handle(object $entity, mixed $data): object
             {
                 return $entity;
             }
@@ -147,12 +165,12 @@ final class DataControlTest extends TestCase
             {
             }
 
-            public function forgetDataAfterCurrent(mixed $entity): bool
+            public function forgetDataAfterCurrent(object $entity): bool
             {
                 return $this->forgetAfterCurrent;
             }
 
-            public function handle(mixed $entity, mixed $data): mixed
+            public function handle(object $entity, mixed $data): object
             {
                 return $entity;
             }

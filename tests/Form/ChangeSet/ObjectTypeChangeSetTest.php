@@ -8,13 +8,17 @@ use DateTime;
 use Lexal\SteppedForm\Form\ChangeSet\ChangeSetTypeInterface;
 use Lexal\SteppedForm\Form\ChangeSet\ObjectTypeChangeSet;
 use Lexal\SteppedForm\Form\ChangeSet\SimpleTypeChangeSet;
+use Lexal\SteppedForm\Tests\CreateObjectTrait;
 use Lexal\SteppedForm\Tests\EntityEnum;
+use Lexal\SteppedForm\Tests\SimpleEntity;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
 final class ObjectTypeChangeSetTest extends TestCase
 {
+    use CreateObjectTrait;
+
     /**
      * @param array<string, ChangeSetTypeInterface> $changeSet
      */
@@ -39,7 +43,7 @@ final class ObjectTypeChangeSetTest extends TestCase
      * @param array<string, ChangeSetTypeInterface> $changeSet
      */
     #[DataProvider('reflectDataProvider')]
-    public function testReflect(mixed $reflectOn, array $changeSet, ?object $object, mixed $expected): void
+    public function testReflect(mixed $reflectOn, array $changeSet, object $object, mixed $expected): void
     {
         $changeSet = new ObjectTypeChangeSet($changeSet, $object);
 
@@ -55,25 +59,32 @@ final class ObjectTypeChangeSetTest extends TestCase
      */
     public static function reflectDataProvider(): iterable
     {
-        $reflectOn = new stdClass();
-        $reflectOn->name = 'name';
-        $reflectOn->type = 'type';
-        $reflectOn->color = 'red';
-
-        $object = new stdClass();
-        $object->name = 'replaced';
-        $object->type = 'rename';
-        $object->color = 'blue';
-
-        $expected = new stdClass();
-        $expected->name = 'replaced';
-        $expected->type = 'rename';
-        $expected->color = 'red';
-
         yield 'reflect on object with change set' => [
-            $reflectOn,
+            self::createObject(['name' => 'name', 'type' => 'type', 'color' => 'red']),
             ['name' => new SimpleTypeChangeSet('replaced'), 'type' => new SimpleTypeChangeSet('rename')],
-            $object,
+            self::createObject(['name' => 'replaced', 'type' => 'rename', 'color' => 'blue']),
+            self::createObject(['name' => 'replaced', 'type' => 'rename', 'color' => 'red']),
+        ];
+
+        yield 'reflect on object with dynamic properties' => [
+            self::createObject(['name' => 'name', 'type' => 'type']),
+            ['name' => new SimpleTypeChangeSet('replaced'), 'color' => new SimpleTypeChangeSet('red')],
+            self::createObject(['name' => 'replaced', 'color' => 'red']),
+            self::createObject(['name' => 'replaced', 'type' => 'type', 'color' => 'red']),
+        ];
+
+        $expected = new SimpleEntity(5);
+        $expected->name = 'replaced';
+
+        yield 'reflect on object with static properties' => [
+            new SimpleEntity(),
+            [
+                'name' => new SimpleTypeChangeSet('replaced'),
+                'price' => new SimpleTypeChangeSet(5),
+                'color' => new SimpleTypeChangeSet('blue'),
+                'random' => new SimpleTypeChangeSet('value'),
+            ],
+            new SimpleEntity(12),
             $expected,
         ];
 
@@ -103,7 +114,7 @@ final class ObjectTypeChangeSetTest extends TestCase
         self::assertEquals(EntityEnum::Canceled, $reflected);
     }
 
-    public function testReflectOnNotAndObject(): void
+    public function testReflectOnNotObject(): void
     {
         $object = new stdClass();
         $object->name = 'name';

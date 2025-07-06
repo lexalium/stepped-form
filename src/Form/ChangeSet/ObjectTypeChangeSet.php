@@ -15,7 +15,7 @@ final class ObjectTypeChangeSet implements ChangeSetTypeInterface
     /**
      * @param array<string, ChangeSetTypeInterface> $changeSet
      */
-    public function __construct(private readonly array $changeSet, private readonly ?object $object)
+    public function __construct(private readonly array $changeSet, private readonly object $object)
     {
     }
 
@@ -46,6 +46,37 @@ final class ObjectTypeChangeSet implements ChangeSetTypeInterface
      * @return array<string, mixed>
      */
     private function getPropertiesValues(object $object): array
+    {
+        return $object instanceof stdClass
+            ? $this->getDynamicPropertiesValues($object)
+            : $this->getStaticPropertiesValues($object);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getDynamicPropertiesValues(stdClass $object): array
+    {
+        $properties = [];
+        $objectProperties = ObjectDefinition::getPropertiesByObject($object);
+
+        foreach ($this->changeSet as $property => $changeSet) {
+            $value = null;
+
+            if (isset($objectProperties[$property])) {
+                $value = $objectProperties[$property]->getValue($object);
+            }
+
+            $properties[$property] = $changeSet->reflect($value);
+        }
+
+        return $properties;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getStaticPropertiesValues(object $object): array
     {
         $properties = [];
 

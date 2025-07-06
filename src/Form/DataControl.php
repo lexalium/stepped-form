@@ -13,18 +13,16 @@ use Lexal\SteppedForm\Step\StepKey;
 
 final class DataControl implements DataControlInterface
 {
-    private const KEY_INITIALIZE_ENTITY = '__INITIALIZE__';
-
     public function __construct(private readonly DataStorageInterface $storage)
     {
     }
 
-    public function getInitializeEntity(): mixed
+    public function getInitializeEntity(): object
     {
-        return $this->storage->get(new StepKey(self::KEY_INITIALIZE_ENTITY));
+        return $this->storage->getInitializeEntity();
     }
 
-    public function getEntity(): mixed
+    public function getEntity(): object
     {
         try {
             $entity = $this->storage->getLast();
@@ -40,21 +38,23 @@ final class DataControl implements DataControlInterface
         return $this->storage->has($key);
     }
 
-    public function getStepEntity(StepKey $key): mixed
+    public function getStepEntity(StepKey $key): object
     {
-        if (!$this->hasStepEntity($key)) {
+        $entity = $this->storage->get($key);
+
+        if ($entity === null) {
             throw new EntityNotFoundException($key);
         }
 
-        return $this->storage->get($key);
+        return $entity;
     }
 
-    public function start(mixed $entity): void
+    public function initialize(object $entity, string $session): void
     {
-        $this->storage->put(new StepKey(self::KEY_INITIALIZE_ENTITY), $entity);
+        $this->storage->initialize($entity, $session);
     }
 
-    public function handle(Step $step, mixed $entity, bool $isDynamicForm): void
+    public function handle(Step $step, object $entity, bool $isDynamicForm): void
     {
         $isForgetAfter = $step->step instanceof StepBehaviourInterface && $step->step->forgetDataAfterCurrent($entity);
 
@@ -63,5 +63,10 @@ final class DataControl implements DataControlInterface
         }
 
         $this->storage->put($step->key, $entity);
+    }
+
+    public function cancel(): void
+    {
+        $this->storage->clear();
     }
 }
